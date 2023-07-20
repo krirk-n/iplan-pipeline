@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data/*
+!data/multipliers.json
+!data/lem-2021-parse-4_all_ranked.csv
+env

@@ -1,0 +1,415 @@
+---
+title: "ONA analysis for iPlan"
+output: html_notebook
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+rm(list = ls())
+setwd("D:/Projects/Epistemic Learning/iPlan/lem-analysis")
+```
+
+```{r}
+# install.packages("ona", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/ona/cran/", "https://cran.rstudio.org"))
+# install.packages("tma", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/tma/cran/", "https://cran.rstudio.org"))
+# install.packages("magrittr")
+```
+
+```{r include=FALSE, warning=FALSE}
+library(ona)
+library(tma)
+library(magrittr)
+library(rENA)
+library(tidyverse)
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+library(ggfortify)
+library(data.table)
+library(superheat)
+library(rjson)
+library(plotly)
+library(RColorBrewer)
+```
+
+# 0. setting up constant variables (change as appropriate)
+```{r}
+mapid = "57718789"
+wd = "D:/Projects/Epistemic Learning/iPlan/lem-analysis/data/"
+```
+
+# 1. read A B C matrices and other relevant data
+```{r}
+A_matrix = read_csv(paste0(wd, mapid, "_a_matrix.csv"))
+B_matrix = read_csv(paste0(wd, mapid, "_b_matrix.csv"))
+C_matrix = read.csv(paste0(wd, mapid, "_c_matrix.csv"))
+sh_info = read.csv("LEM text - Stakeholders.csv")
+A = jsonlite::read_json(paste0(wd, mapid, ".json"))
+reps = jsonlite::read_json(paste0(wd, mapid, "_reps.json"))
+sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy level
+```
+
+```{r}
+submission_name = c()
+sub_approval_count = c()
+for (i in 1:length(sub_result)){
+  submission_name = append(submission_name, sub_result[[i]]$userKey)
+  sub_approval_count = append(sub_approval_count, sub_result[[i]]$approvalCount)
+}
+```
+
+```{r}
+sub_approval_count = sub_approval_count/9
+# sub_approval_count
+```
+
+```{r}
+sh_name = A_matrix %>%
+  select(c(Name)) %>%
+  unique() %>%
+  pull()
+```
+
+```{r}
+sh_info = sh_info %>% 
+  filter(Name %in% sh_name) %>% 
+  arrange(match(Name, sh_name)) %>% 
+  unite("SHinfo", Name:Direction, remove = TRUE) %>% 
+  pull()
+```
+
+reference:
+luc_0 = "Commercial"
+luc_1 = "Conservation"
+luc_2 = "Cropland" 
+luc_3 = "Industrial" 
+luc_4 = "Limited Use"
+luc_5 = "Pasture"
+luc_6 = "Recreation"
+luc_7 = "Residential HD" 
+luc_8 = "Residential LD" 
+luc_9 = "Timber" 
+luc_10 = "Wetlands"
+
+luc_vec = c("luc_0", "luc_1","luc_2","luc_3","luc_4","luc_5","luc_6","luc_7","luc_8","luc_9","luc_10")
+luc_original = c("20", "31", "50", "21", "30", "60", "22", "23", "24", "40", "10")
+
+# 1. combine conservation and limited use and set self-connection to zero
+which means luc_1_X + luc_4_X, luc_X_1 + luc_X_4
+```{r}
+A_matrix_2 <- A_matrix
+B_matrix_2 <- B_matrix
+C_matrix_2 <- C_matrix
+for (i in 1:11) {
+  A_luc1x = which(names(A_matrix_2)==paste0("luc_", 1, "_", i-1))
+  A_luc4x = which(names(A_matrix_2)==paste0("luc_", 4, "_", i-1))
+  B_luc1x = which(names(B_matrix_2)==paste0("luc_", 1, "_", i-1))
+  B_luc4x = which(names(B_matrix_2)==paste0("luc_", 4, "_", i-1))
+  C_luc1x = which(names(C_matrix_2)==paste0("luc_", 1, "_", i-1))
+  C_luc4x = which(names(C_matrix_2)==paste0("luc_", 4, "_", i-1))
+  A_matrix_2[[A_luc1x]] <- A_matrix_2[[A_luc1x]] + A_matrix_2[[A_luc4x]]
+  B_matrix_2[[B_luc1x]] <- B_matrix_2[[B_luc1x]] + B_matrix_2[[B_luc4x]]
+  C_matrix_2[[C_luc1x]] <- C_matrix_2[[C_luc1x]] + C_matrix_2[[C_luc4x]]
+}
+for (i in 1:11) {
+  A_lucx1 = which(names(A_matrix_2)==paste0("luc_", i-1, "_", 1))
+  A_lucx4 = which(names(A_matrix_2)==paste0("luc_", i-1, "_", 4))
+  B_lucx1 = which(names(B_matrix_2)==paste0("luc_", i-1, "_", 1))
+  B_lucx4 = which(names(B_matrix_2)==paste0("luc_", i-1, "_", 4))
+  C_lucx1 = which(names(C_matrix_2)==paste0("luc_", i-1, "_", 1))
+  C_lucx4 = which(names(C_matrix_2)==paste0("luc_", i-1, "_", 4))
+  A_matrix_2[[A_lucx1]] <- A_matrix_2[[A_lucx1]] + A_matrix_2[[A_lucx4]]
+  B_matrix_2[[B_lucx1]] <- B_matrix_2[[B_lucx1]] + B_matrix_2[[B_lucx4]]
+  C_matrix_2[[C_lucx1]] <- C_matrix_2[[C_lucx1]] + C_matrix_2[[C_lucx4]]
+}
+for (i in 1:11) {
+  A_lucxx = which(names(A_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  B_lucxx = which(names(B_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  C_lucxx = which(names(C_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  A_matrix_2[[A_lucxx]] = 0
+  B_matrix_2[[B_lucxx]] = 0
+  C_matrix_2[[C_lucxx]] = 0
+}
+
+A_matrix_2 <- A_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+B_matrix_2 <- B_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+C_matrix_2 <- C_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+```
+
+# 2. make ABC col names consistent for the ease of later work
+```{r}
+colnames(A_matrix_2)[2] = "SH"
+A_matrix_2 <- A_matrix_2 %>%
+  select(-c(...1)) %>% 
+  add_column(user_name = "NA", .before = "luc_0_0") %>%
+  add_column(submission = "NA",.before = "luc_0_0") %>%
+  add_column(index = 1:nrow(A_matrix), .before = "SH")
+```
+
+```{r}
+colnames(B_matrix_2)[2] = "SH"
+B_matrix_2 <- B_matrix_2 %>%
+  select(-c(...1)) %>% 
+  add_column(user_name = "NA", .before = "luc_0_0") %>%
+  add_column(submission = "NA",.before = "luc_0_0") %>%
+  add_column(index = 1:nrow(B_matrix), .before = "SH")
+```
+
+```{r}
+C_matrix_2 <- C_matrix_2 %>%
+  add_column(index = 1:nrow(C_matrix_2), .before = "user_name") %>%
+  add_column(Name = "NA", .before = "user_name") %>%
+  add_column(Satisfy = "NA",.before = "user_name") %>%
+  add_column(N = "NA", .before = "user_name")
+```
+
+# 3.run ONA
+call generate.ona.object function
+```{r generate.ona.object}
+generate.ona.object <- function(data, unit.col, meta.col, codes){
+  output <- list()
+  f.units <- unit.col
+  ENA_UNIT <- rENA::merge_columns_c(f.units, cols = colnames(f.units));
+  # ENA_UNIT <-  f.units
+  f.raw <- data
+  f.codes <- codes
+  dena_data = directedENA:::ena.set.directed(f.raw, f.units, NA, f.codes)
+  output.meta.data <- meta.col
+  dena_data$meta.data <- data.table::as.data.table(cbind(ENA_UNIT, output.meta.data))
+  for( i in colnames(dena_data$meta.data) ) {
+    set(dena_data$meta.data, j = i, value = rENA::as.ena.metadata(dena_data$meta.data[[i]]))
+  }
+  code_length <- length(dena_data$rotation$codes);
+  dena_data$rotation$adjacency.key <- data.table::data.table(matrix(c(
+    rep(1:code_length, code_length),
+    rep(1:code_length, each = code_length)),
+    byrow = TRUE, nrow = 2
+  ))
+  directed.adjacency.vectors <- as.ena.matrix(data.table::as.data.table(data[, grep("V", colnames(data))]), "ena.connections")
+  # aren't these two the same thing 
+  dena_data$connection.counts <- data.table::as.data.table(cbind(dena_data$meta.data, directed.adjacency.vectors))
+  dena_data$connection.counts = rENA::as.ena.matrix(x = dena_data$connection.counts, "ena.connections")
+  for (i in which(!rENA::find_meta_cols(dena_data$connection.counts)))
+    set(dena_data$connection.counts, j = i, value = as.ena.co.occurrence(as.double(dena_data$connection.counts[[i]])))
+  dena_data$model$row.connection.counts = data.table::as.data.table(cbind(dena_data$meta.data, directed.adjacency.vectors))
+  dena_data$model$row.connection.counts <- rENA::as.ena.matrix(dena_data$model$row.connection.counts, "row.connections")
+  output = dena_data;
+  return(output)
+}
+```
+
+```{r}
+# 1. prepare df
+
+# df <- A_matrix
+# df <- B_matrix
+df <- C_matrix_2
+
+names(df)[7:106] <- paste0("V",seq(1:100))
+df$mapid = mapid
+
+# 2. accum
+accumC <- generate.ona.object(
+  df,
+  unit.col = df[,1:7],
+  meta.col = df[,1:7],
+  codes = as.vector(
+    c("Commercial",
+    "Conservation_lu",
+    # "Conservation",
+    "Cropland",
+    "Industrial",
+    # "Limited Use",
+    "Pasture",
+    "Recreation",
+    "Residential HD",
+    "Residential LD",
+    "Timber",
+    "Wetlands")))
+
+# 3. model
+setC <- model(accumC)
+
+# 4. GoF
+correlations(setC)
+
+```
+
+```{r}
+# 1. prepare df
+
+df1 <- A_matrix_2
+# df <- B_matrix
+# df <- C_matrix
+
+names(df1)[7:106] <- paste0("V",seq(1:100))
+df1$mapid = mapid
+
+# 2. accum
+accumA <- generate.ona.object(
+  df1,
+  unit.col = df1[,1:7],
+  meta.col = df1[,1:7],
+  codes = as.vector(
+    c("Commercial",
+    "Conservation_lu",
+    # "Conservation",
+    "Cropland",
+    "Industrial",
+    # "Limited Use",
+    "Pasture",
+    "Recreation",
+    "Residential HD",
+    "Residential LD",
+    "Timber",
+    "Wetlands")))
+
+# 3. model
+setA <- model(accumA)
+
+# 4. GoF
+correlations(setA)
+```
+
+# 4. project C points into A space
+To do so, I need to make a set using C's accumulation and A's rotation matrix
+```{r}
+set=model(accumC, rotation.set = setA$rotation)
+```
+
+# 5. ona plotting 
+## 5.1 setting global visual parameters here so that all ONA plots we generate are on the same scale
+```{r}
+node_size_multiplier = 0.2
+node_position_multiplier = 1.0
+edge_size_multiplier = 0.2
+point_position_multiplier = 1.0
+edge_arrow_saturation_multiplier = 1.0
+```
+
+```{r}
+ona:::plot.ena.directed.set(setC) %>% 
+  units( 
+    points = setC$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE)
+```
+
+## 5.2 quick check points ARE being rotated
+```{r}
+ona:::plot.ena.directed.set(setA, title = "space used for projection and its points") %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = TRUE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+
+ona:::plot.ena.directed.set(setC, title = "points need to be projected in its original space") %>%
+  units( 
+    points = setC$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE)%>%
+ nodes(
+    node_size_multiplier = 0.001) 
+
+ona:::plot.ena.directed.set(set, title = "projected points in its new space") %>%
+  units(
+    points = set$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+```
+
+## Cluster Check:
+
+
+```{r}
+ona:::plot.ena.directed.set(setA, title = "space used for projection and its points") %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = TRUE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+```
+
+```{r}
+A = setA$points[ENA_DIRECTION== 'response']
+```
+
+## 5.3 YES 9 means + submission trajectory
+
+```{r}
+user_names <- unique(C_matrix$user_name)
+n <- length(user_names)
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+colors_selected <- sample(col_vector, n)
+pie(rep(1,n), col=colors)
+```
+
+```{r}
+colors <- c("green", "blue", "brown", "purple", "yellow", "deeppink", "Tan", "Cyan", "orange")
+
+p <- ona:::plot.ena.directed.set(set) %>%
+  units(
+    points = set$points,
+    points_color = "white",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = FALSE,
+    show_points = TRUE,
+    with_ci = FALSE
+  )
+
+for (i in 1:length(sh_name)) {
+  p <- p %>%
+    units(
+      points = setA$points[SH == sh_name[i] & Satisfy == "Yes"],
+      points_color = colors[i],
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE,
+      show_points = FALSE,
+      with_ci = FALSE
+    )
+}
+j = 0
+k = 1
+prev = ""
+for (i in 1:length(submission_name)) {
+  if (submission_name[i] != prev) {
+    j <- j+1
+    prev <- submission_name[i]
+    k <- 1
+  }
+  p <- p %>%
+    add_annotations(
+      x = set$points[ENA_DIRECTION == "response"]$SVD1[i],
+      y = set$points[ENA_DIRECTION == "response"]$SVD2[i],
+      text = paste0(submission_name[i], k),
+      font = list(color = colors_selected[j]),
+      showarrow = FALSE
+    )
+  k <- k+1
+}
+p
+```
+
