@@ -4,5 +4,5 @@
 .Ruserdata
 data/*
 !data/multipliers.json
-!data/lem-2021-parse-4_all_ranked.csv
+!data/LEM text - Stakeholders.csv
 env

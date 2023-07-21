@@ -20,17 +20,6 @@ mapid = r["mapid"] # set your mapid here or you can pass it in the command line 
 
 if len(sys.argv) == 2 and len(sys.argv[1]) == 8:
     mapid = sys.argv[1]
-
-user_data = pd.read_csv(r["wd"] + "/data/lem-2021-parse-4_all_ranked.csv") # outdated -> TODO: change it to always use current data
-parcels_changed_dict = user_data["parcelschanged"].value_counts().to_dict()
-
-sorted_pc_dict = dict(sorted(parcels_changed_dict.items()))
-sorted_pc_dict
-sorted_pc_dict = dict(itertools.islice(sorted_pc_dict.items(), 100)) 
-
-prob_pc_dict = dict()
-for i in sorted_pc_dict.keys():
-    prob_pc_dict[i] = sorted_pc_dict[i]/sum(sorted_pc_dict.values())
     
 # Opening JSON file
 

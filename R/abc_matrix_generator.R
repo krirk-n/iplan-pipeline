@@ -1,6 +1,6 @@
 # author: Krirk Nirunwiroj, 2023
 # Disclaimer: if you want to re-generate the C matrix, make sure to remove the current C matrix file before re-run the code
-# since we are using appending method.
+# since we are using appending method it may cause unwanted errors.
 
 library(readr)
 library(dplyr)
@@ -17,8 +17,6 @@ a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
   data = read.csv(paste0(wd, "/data/new_final_result_", mapid,".csv"))
   data_1 = separate(data, index, into = c("Name", "Satisfy", "N"))
   data_1$N = as.numeric(data_1$N)
-  
-  
   luc_idx_reverse = c()
   luc_idx = c()
   luc_idx_reverse = append(luc_idx_reverse, c("Name", "Satisfy", "N"))
@@ -33,24 +31,19 @@ a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
   }
   colnames(data_1) = luc_idx_reverse
   data_1 = data_1[,luc_idx]
-  
   yes_mean = data_1 %>% 
     filter(Satisfy == "Yes") %>% 
     group_by(Name, Satisfy) %>% 
     summarise_at(vars(luc_0_0:luc_10_10), mean)
-  
-  
   no_mean = data_1 %>% 
     filter(Satisfy == "No") %>% 
     group_by(Name, Satisfy) %>% 
     summarise_at(vars(luc_0_0:luc_10_10), mean)
-  
   yes_mean$X = seq.int(nrow(yes_mean))
   no_mean$X = seq.int(nrow(no_mean))
   all_mean = rbind(yes_mean, no_mean)
   all_mean = all_mean %>% 
     relocate(X, .before = luc_0_0)
-  
   filename_a_matrix = paste0(mapid, "_a_matrix.csv")
   filename_b_matrix = paste0(mapid, "_b_matrix.csv")
   write.csv(data_1, file = paste0(wd, "/data/", filename_a_matrix))

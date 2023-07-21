@@ -9,9 +9,11 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r}
 rm(list = ls())
-setwd("D:/Projects/Epistemic Learning/iPlan/lem-analysis")
+library("rstudioapi")
+setwd(dirname(getActiveDocumentContext()$path))
 ```
 
+Uncomment and run this block if you haven't had these packages installed
 ```{r}
 # install.packages("ona", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/ona/cran/", "https://cran.rstudio.org"))
 # install.packages("tma", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/tma/cran/", "https://cran.rstudio.org"))
@@ -39,15 +41,15 @@ library(RColorBrewer)
 # 0. setting up constant variables (change as appropriate)
 ```{r}
 mapid = "57718789"
-wd = "D:/Projects/Epistemic Learning/iPlan/lem-analysis/data/"
+wd = paste0(getwd(), "/data/")
 ```
 
-# 1. read A B C matrices and other relevant data
+# 0. read A B C matrices and other relevant data
 ```{r}
 A_matrix = read_csv(paste0(wd, mapid, "_a_matrix.csv"))
 B_matrix = read_csv(paste0(wd, mapid, "_b_matrix.csv"))
 C_matrix = read.csv(paste0(wd, mapid, "_c_matrix.csv"))
-sh_info = read.csv("LEM text - Stakeholders.csv")
+sh_info = read.csv(paste0(wd, "LEM text - Stakeholders.csv"))
 A = jsonlite::read_json(paste0(wd, mapid, ".json"))
 reps = jsonlite::read_json(paste0(wd, mapid, "_reps.json"))
 sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy level
@@ -364,7 +366,7 @@ n <- length(user_names)
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 colors_selected <- sample(col_vector, n)
-pie(rep(1,n), col=colors)
+pie(rep(1,n), col=colors_selected)
 ```
 
 ```{r}
@@ -388,7 +390,7 @@ for (i in 1:length(sh_name)) {
       point_position_multiplier = point_position_multiplier,
       show_mean = TRUE,
       show_points = FALSE,
-      with_ci = FALSE
+      with_ci = FALSE,
     )
 }
 j = 0

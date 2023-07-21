@@ -1,6 +1,6 @@
 # author: Krirk Nirunwiroj, 2023
 # For the best practice, you should run line by line and check the output and variables for any error that may occur.
-# However, if you are certain with the codes, you may click "Source" to quickly generate the A, B, and C matrices for the specified mapid.
+# However, if you are certain with the codes, you may click "Source" to quickly generate the A, B, and C matrices for the desired mapid.
 
 rm(list = ls())
 
