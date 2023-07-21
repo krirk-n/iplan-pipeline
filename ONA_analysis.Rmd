@@ -412,6 +412,7 @@ for (i in 1:length(submission_name)) {
     )
   k <- k+1
 }
+data.frame(Stakeholders = sh_name, Colors = colors)
 p
 ```
 
