@@ -393,6 +393,13 @@ for (i in 1:length(sh_name)) {
       with_ci = FALSE,
     )
 }
+
+p <- p %>%
+  nodes(
+    node_size_multiplier = 0.01,
+    node_position_multiplier = node_position_multiplier,
+    self_connection_color = "blue")
+
 j = 0
 k = 1
 prev = ""
@@ -412,7 +419,129 @@ for (i in 1:length(submission_name)) {
     )
   k <- k+1
 }
-data.frame(Stakeholders = sh_name, Colors = colors)
-p
+p %>%
+plotly::layout(showlegend = TRUE, legend = list(x = 100, y = 0.9)) %>% 
+    style(name = "point", traces = c(2)) %>% 
+  style(name = sh_info[1], traces = c(3)) %>% 
+  style(name = sh_info[2], traces = c(4)) %>% 
+  style(name = sh_info[3], traces = c(5)) %>% 
+  style(name = sh_info[4], traces = c(6)) %>% 
+  style(name = sh_info[5], traces = c(7)) %>% 
+  style(name = sh_info[6], traces = c(8)) %>% 
+  style(name = sh_info[7], traces = c(9)) %>% 
+  style(name = sh_info[8], traces = c(10)) %>% 
+  style(name = sh_info[9], traces = c(11))
 ```
+
+```{r}
+ona:::plot.ena.directed.set(set) %>%
+# 9 yes
+units(
+    points=set$points,
+    points_color = "white",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[1] & Satisfy == "Yes"],
+    points_color = "green",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[2] & Satisfy == "Yes"],
+    points_color = "blue",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[3] & Satisfy == "Yes"],
+    points_color = "brown",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[4] & Satisfy == "Yes"],
+    points_color = "purple",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[5] & Satisfy == "Yes"],
+    points_color = "yellow",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[6] & Satisfy == "Yes"],
+    points_color = "deeppink",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[7] & Satisfy == "Yes"],
+    points_color = "Tan",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[8] & Satisfy == "Yes"],
+    points_color = "Cyan",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[9] & Satisfy == "Yes"],
+    points_color = "orange",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+# 9 no
+# units(
+#     points = setA$points[SH == "Ezra" & Satisfy == "No"],
+#     points_color = "green",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Said" & Satisfy == "No"],
+#     points_color = "blue",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Lamont" & Satisfy == "No"],
+#     points_color = "brown",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Andre" & Satisfy == "No"],
+#     points_color = "purple",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Ed" & Satisfy == "No"],
+#     points_color = "yellow",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Grace" & Satisfy == "No"],
+#     points_color = "deeppink",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Maya" & Satisfy == "No"],
+#     points_color = "Tan",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Natalie" & Satisfy == "No"],
+#     points_color = "Cyan",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#     points = setA$points[SH == "Dwayne" & Satisfy == "No"],
+#     points_color = "orange",
+#     point_position_multiplier = point_position_multiplier,
+#     show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+# units(
+#   points=set$points[user_name == i],
+#   points_color = "black",
+#   point_position_multiplier = point_position_multiplier,
+#   show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+nodes(
+  node_size_multiplier = 0.01,
+  node_position_multiplier = node_position_multiplier,
+  self_connection_color = "blue")
+
+```
+
 
