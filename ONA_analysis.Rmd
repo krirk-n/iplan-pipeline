@@ -15,8 +15,8 @@ setwd(dirname(getActiveDocumentContext()$path))
 
 Uncomment and run this block if you haven't had these packages installed
 ```{r}
-# install.packages("ona", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/ona/cran/", "https://cran.rstudio.org"))
-# install.packages("tma", repos = c("https://epistemic-analytics.gitlab.io/qe-packages/tma/cran/", "https://cran.rstudio.org"))
+# install.packages("ona", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
+# install.packages("tma", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
 # install.packages("magrittr")
 ```
 
@@ -36,11 +36,12 @@ library(superheat)
 library(rjson)
 library(plotly)
 library(RColorBrewer)
+library(randomcoloR)
 ```
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-mapid = "23917296"
+mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
 
@@ -56,10 +57,11 @@ sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy 
 ```
 
 ```{r}
-submission_name = c()
+submission_name = C_matrix$user_name
+submission_order = c()
 sub_approval_count = c()
 for (i in 1:length(sub_result)){
-  submission_name = append(submission_name, sub_result[[i]]$userKey)
+  submission_order = append(submission_order, sub_result[[i]]$userKey)
   sub_approval_count = append(sub_approval_count, sub_result[[i]]$approvalCount)
 }
 ```
@@ -363,74 +365,95 @@ A = setA$points[ENA_DIRECTION== 'response']
 ```{r}
 user_names <- unique(C_matrix$user_name)
 n <- length(user_names)
-qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
-col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
-colors_selected <- sample(col_vector, n)
+colors_selected <- distinctColorPalette(n)
 pie(rep(1,n), col=colors_selected)
 ```
 
 ```{r}
-colors <- c("green", "blue", "brown", "purple", "yellow", "deeppink", "Tan", "Cyan", "orange")
+ona_plot <- function(includeSub = TRUE){
+  colors <- c("green", "blue", "brown", "purple", "yellow", "deeppink", "Tan", "Cyan", "orange")
 
-p <- ona:::plot.ena.directed.set(set) %>%
-  units(
-    points = set$points,
-    points_color = "white",
-    point_position_multiplier = point_position_multiplier,
-    show_mean = FALSE,
-    show_points = TRUE,
-    with_ci = FALSE
-  )
-
-for (i in 1:length(sh_name)) {
-  p <- p %>%
+  p <- ona:::plot.ena.directed.set(set) %>%
     units(
-      points = setA$points[SH == sh_name[i] & Satisfy == "Yes"],
-      points_color = colors[i],
+      points = set$points,
+      points_color = "white",
       point_position_multiplier = point_position_multiplier,
-      show_mean = TRUE,
-      show_points = FALSE,
-      with_ci = FALSE,
+      show_mean = FALSE,
+      show_points = TRUE,
+      with_ci = FALSE
     )
-}
-
-p <- p %>%
-  nodes(
-    node_size_multiplier = 0.01,
-    node_position_multiplier = node_position_multiplier,
-    self_connection_color = "blue")
-
-j = 0
-k = 1
-prev = ""
-for (i in 1:length(submission_name)) {
-  if (submission_name[i] != prev) {
-    j <- j+1
-    prev <- submission_name[i]
-    k <- 1
+  
+  for (i in 1:length(sh_name)) {
+    tryCatch({
+      p <- p %>%
+        units(
+          points = setA$points[SH == sh_name[i] & Satisfy == "Yes"],
+          points_color = colors[i],
+          point_position_multiplier = point_position_multiplier,
+          show_mean = TRUE,
+          show_points = FALSE,
+          with_ci = TRUE
+        )
+    }, error = function(e) {
+      cat("An error occurred:", conditionMessage(e), "\n")
+      # If an error occurs, set with_ci = FALSE
+      p <- p %>%
+        units(
+          points = setA$points[SH == sh_name[i] & Satisfy == "Yes"],
+          points_color = colors[i],
+          point_position_multiplier = point_position_multiplier,
+          show_mean = TRUE,
+          show_points = FALSE,
+          with_ci = FALSE
+      )
+    })
+  }
+  
+  p <- p %>%
+    nodes(
+      node_size_multiplier = 0.01,
+      node_position_multiplier = node_position_multiplier,
+      self_connection_color = "blue")
+  if(includeSub) {
+    j = 0
+    k = 1
+    prev = ""
+    for (i in 1:length(submission_name)) {
+      if (submission_name[i] != prev) {
+        j <- j+1
+        prev <- submission_name[i]
+        k <- 1
+      }
+      p <- p %>%
+        add_annotations(
+          x = set$points[ENA_DIRECTION == "response"]$SVD1[i],
+          y = set$points[ENA_DIRECTION == "response"]$SVD2[i],
+          text = paste0(submission_name[i], "[", k, "]"),
+          font = list(color = colors_selected[j]),
+          showarrow = FALSE
+        )
+      k <- k+1
+    }
   }
   p <- p %>%
-    add_annotations(
-      x = set$points[ENA_DIRECTION == "response"]$SVD1[i],
-      y = set$points[ENA_DIRECTION == "response"]$SVD2[i],
-      text = paste0(submission_name[i], k),
-      font = list(color = colors_selected[j]),
-      showarrow = FALSE
-    )
-  k <- k+1
+  plotly::layout(showlegend = TRUE, legend = list(x = 100, y = 0.9)) %>% 
+      style(name = "point", traces = c(2)) %>% 
+    style(name = sh_info[1], traces = c(3)) %>% 
+    style(name = sh_info[2], traces = c(4)) %>% 
+    style(name = sh_info[3], traces = c(5)) %>% 
+    style(name = sh_info[4], traces = c(6)) %>% 
+    style(name = sh_info[5], traces = c(7)) %>% 
+    style(name = sh_info[6], traces = c(8)) %>% 
+    style(name = sh_info[7], traces = c(9)) %>% 
+    style(name = sh_info[8], traces = c(10)) %>% 
+    style(name = sh_info[9], traces = c(11))
+  return(p)
 }
-p <- p %>%
-plotly::layout(showlegend = TRUE, legend = list(x = 100, y = 0.9)) %>% 
-    style(name = "point", traces = c(2)) %>% 
-  style(name = sh_info[1], traces = c(3)) %>% 
-  style(name = sh_info[2], traces = c(4)) %>% 
-  style(name = sh_info[3], traces = c(5)) %>% 
-  style(name = sh_info[4], traces = c(6)) %>% 
-  style(name = sh_info[5], traces = c(7)) %>% 
-  style(name = sh_info[6], traces = c(8)) %>% 
-  style(name = sh_info[7], traces = c(9)) %>% 
-  style(name = sh_info[8], traces = c(10)) %>% 
-  style(name = sh_info[9], traces = c(11))
-p
+
+```
+
+```{r}
+ona_plot(FALSE)
+ona_plot()
 ```
 

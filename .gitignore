@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+ONA_analysis.nb.html
 data/*
 !data/multipliers.json
 !data/LEM text - Stakeholders.csv

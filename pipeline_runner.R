@@ -31,8 +31,6 @@ saveRDS(sub_result, sub_result_name)
 reticulate::source_python("py/preABC_generator.py")
 
 # ABc Matrices generator:
-# Disclaimer: if you want to re-generate the C matrix, make sure to remove the current C matrix file before re-run the code
-# since we are using appending method.
 source("R/abc_matrix_generator.R")
 
 # if you want ONA graphs, please proceed to ONA_analysis.Rmd after run all the previous lines.

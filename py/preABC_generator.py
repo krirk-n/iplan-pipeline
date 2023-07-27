@@ -25,16 +25,13 @@ if len(sys.argv) == 2 and len(sys.argv[1]) == 8:
 
 d = open(r["wd"] + "/data/" + mapid + "_init_map.json") # generated from pipline
 
-f = open(r["wd"] + "/data/" + 'multipliers.json')
+f = open(r["wd"] + "/data/" + 'multipliers.json') # TODO: find a more effective way for more general cases
 
 g = open(r["wd"] + "/data/" + mapid + "_reps.json") # generated from pipline #Name, Indicator, Threshold
 
 init = json.load(d)
 multiplier = json.load(f)
 reps = json.load(g)
-
-# usda = init['fips']['usda']
-biome = init["biome"]
 
 indicator_keys_mult_table = dict()
 

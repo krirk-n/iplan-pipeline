@@ -12,6 +12,8 @@ library(data.table)
 library(superheat)
 library(rlist)
 
+# Functions:
+
 # a and b matrix generating function
 a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
   data = read.csv(paste0(wd, "/data/new_final_result_", mapid,".csv"))
@@ -203,5 +205,15 @@ c_matrix_data_processing = function(mapid, ordered = TRUE, submission_data = rea
   }
 }
 
+# Main:
+
+# remove the existing ABC matrices before generate a new set of them to avoid conflicts
+filename_a_matrix = paste0(mapid, "_a_matrix.csv")
+filename_b_matrix = paste0(mapid, "_b_matrix.csv")
+file.remove(paste0(wd, "/data/", filename_a_matrix))
+file.remove(paste0(wd, "/data/", filename_b_matrix))
 a_b_matrix_data_processing(mapid)
+
+filename_c_matrix = paste0(mapid, "_c_matrix.csv")
+file.remove(paste0(wd, "/data/", filename_c_matrix))
 c_matrix_data_processing(mapid = mapid, ordered = FALSE) # change as appropriate
