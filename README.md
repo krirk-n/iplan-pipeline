@@ -36,9 +36,9 @@ You may install other packages if needed.
 ## Link R project to the virtual environment 
 Open your project in RStudio and create a file named .Rprofile. Add this line to the file and save it:
 ```
-Sys.setenv(RETICULATE_PYTHON = “env/bin/python3”)
+Sys.setenv(RETICULATE_PYTHON = "env/bin/python3")
 ```
-Note: remember to rerun this line and restart R session whenever you updated the location of  “env/bin/python3”
+Note: remember to rerun this line and restart R session whenever you updated the location of "env/bin/python3"
 
 Close the project and re-open it. You should have everything ready.
 
