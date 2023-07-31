@@ -41,7 +41,7 @@ library(randomcoloR)
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-mapid = "24096504"
+mapid = "23917296"
 wd = paste0(getwd(), "/data/")
 ```
 
@@ -428,7 +428,7 @@ ona_plot <- function(includeSub = TRUE){
         add_annotations(
           x = set$points[ENA_DIRECTION == "response"]$SVD1[i],
           y = set$points[ENA_DIRECTION == "response"]$SVD2[i],
-          text = paste0(submission_name[i], "[", k, "]"),
+          text = paste0(substring(submission_name[i], 1, 2), "[", k, "]"),
           font = list(color = colors_selected[j]),
           showarrow = FALSE
         )

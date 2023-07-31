@@ -30,7 +30,7 @@ f = open(r["wd"] + "/data/" + 'multipliers.json') # TODO: find a more effective 
 g = open(r["wd"] + "/data/" + mapid + "_reps.json") # generated from pipline #Name, Indicator, Threshold
 
 init = json.load(d)
-multiplier = json.load(f)
+# multiplier = json.load(f)
 reps = json.load(g)
 
 indicator_keys_mult_table = dict()

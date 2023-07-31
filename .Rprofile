@@ -1,1 +1,1 @@
-Sys.setenv(RETICULATE_PYTHON = “env/bin/python3”)
+Sys.setenv(RETICULATE_PYTHON = "env/bin/python3")
