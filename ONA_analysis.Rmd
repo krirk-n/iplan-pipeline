@@ -37,11 +37,14 @@ library(rjson)
 library(plotly)
 library(RColorBrewer)
 library(randomcoloR)
+library(rlist)
+library(webshot)
 ```
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-mapid = "23917296"
+mapid = "57718789"
+# mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
 
@@ -60,15 +63,26 @@ sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy 
 submission_name = C_matrix$user_name
 submission_order = c()
 sub_approval_count = c()
+sub_order_num= c()
 for (i in 1:length(sub_result)){
   submission_order = append(submission_order, sub_result[[i]]$userKey)
+  sub_order_num = append(sub_order_num, sub_result[[i]]$submissionCount)
   sub_approval_count = append(sub_approval_count, sub_result[[i]]$approvalCount)
 }
 ```
 
 ```{r}
-sub_approval_count = sub_approval_count/9
-# sub_approval_count
+submission_df <- data.frame(userKey = submission_order, submissionCount = sub_order_num, approvalCount = sub_approval_count)
+print(submission_df)
+```
+
+```{r}
+# Create a line plot using ggplot2
+ggplot(submission_df, aes(x = submissionCount, y = approvalCount, color = userKey, linetype = userKey)) +
+  geom_line(size=1) +
+  scale_x_continuous(breaks = 1:nrow(submission_df), labels = 1:nrow(submission_df), minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(0, max(submission_df$approvalCount), by = 1), minor_breaks = NULL) +
+  theme_minimal()
 ```
 
 ```{r}
@@ -370,9 +384,9 @@ pie(rep(1,n), col=colors_selected)
 ```
 
 ```{r}
-ona_plot <- function(includeSub = TRUE){
-  colors <- c("green", "blue", "brown", "purple", "yellow", "deeppink", "Tan", "Cyan", "orange")
-
+ona_plot <- function(includeSub = TRUE, colored = TRUE){
+  colors <- if (colored) c("green", "blue", "brown", "purple", "yellow", "deeppink", "Tan", "Cyan", "orange") else replicate(9, "grey")
+  
   p <- ona:::plot.ena.directed.set(set) %>%
     units(
       points = set$points,
@@ -419,7 +433,8 @@ ona_plot <- function(includeSub = TRUE){
     k = 1
     prev = ""
     for (i in 1:length(submission_name)) {
-      if (submission_name[i] != prev) {
+      if (submission_name[i] %in% selected_users) {
+        if (submission_name[i] != prev) {
         j <- j+1
         prev <- submission_name[i]
         k <- 1
@@ -433,6 +448,7 @@ ona_plot <- function(includeSub = TRUE){
           showarrow = FALSE
         )
       k <- k+1
+      }
     }
   }
   p <- p %>%
@@ -447,6 +463,9 @@ ona_plot <- function(includeSub = TRUE){
     style(name = sh_info[7], traces = c(9)) %>% 
     style(name = sh_info[8], traces = c(10)) %>% 
     style(name = sh_info[9], traces = c(11))
+  p <- p %>% layout(xaxis = list(autorange = TRUE),
+         yaxis = list(autorange = TRUE))
+  # plotly::export(file = "plots/test.png")
   return(p)
 }
 
@@ -454,6 +473,132 @@ ona_plot <- function(includeSub = TRUE){
 
 ```{r}
 ona_plot(FALSE)
+
+selected_users <- user_names[3:6] # for 24096504
+# selected_users <- user_names[1:5] # for 57718789
+# selected_users <- user_names[c(2,3,4,6)] # for 30176134
+# selected_users <- user_names[c(1,2,5,6)] # for 23917296
+
 ona_plot()
+
+selected_users <- user_names[6]
+ona_plot(colored = FALSE) # player(s) highlighted
 ```
+
+
+
+```{r}
+# plotly::export(file = "plots/test2.png")
+```
+
+
+## 5.4 Story
+```{r}
+subs = as.list(unique(set$points$ENA_UNIT))
+
+for (i in subs) {
+  print(ona:::plot.ena.directed.set(set, title = paste0(i)) %>%
+edges(
+    weights = set$line.weights[ENA_UNIT == i],
+    edge_size_multiplier = edge_size_multiplier,
+    edge_arrow_saturation_multiplier = edge_arrow_saturation_multiplier,
+    node_position_multiplier = node_position_multiplier,
+    edge_color = c("red")) %>%
+nodes(
+  node_size_multiplier = node_size_multiplier,
+  node_position_multiplier = node_position_multiplier,
+  self_connection_color = "red")  %>%
+units(
+    points=set$points[ENA_UNIT == i],
+    points_color = "black",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+units(
+    points = setA$points[SH == sh_name[1] & Satisfy == "Yes"],
+    points_color = "green",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[2] & Satisfy == "Yes"],
+    points_color = "blue",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[3] & Satisfy == "Yes"],
+    points_color = "brown",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[4] & Satisfy == "Yes"],
+    points_color = "purple",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[5] & Satisfy == "Yes"],
+    points_color = "yellow",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[6] & Satisfy == "Yes"],
+    points_color = "deeppink",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[7] & Satisfy == "Yes"],
+    points_color = "Tan",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[8] & Satisfy == "Yes"],
+    points_color = "Cyan",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE) %>%
+units(
+    points = setA$points[SH == sh_name[9] & Satisfy == "Yes"],
+    points_color = "orange",
+    point_position_multiplier = point_position_multiplier,
+    show_mean = TRUE, show_points = FALSE, with_ci = TRUE)%>% 
+    plotly::layout(showlegend = TRUE, legend = list(x = 100, y = 0.9)) %>% 
+    style(name = "point", traces = c(2)) %>% 
+  style(name = sh_info[1], traces = c(3)) %>% 
+  style(name = sh_info[2], traces = c(4)) %>% 
+  style(name = sh_info[3], traces = c(5)) %>% 
+  style(name = sh_info[4], traces = c(6)) %>% 
+  style(name = sh_info[5], traces = c(7)) %>% 
+  style(name = sh_info[6], traces = c(8)) %>% 
+  style(name = sh_info[7], traces = c(9)) %>% 
+  style(name = sh_info[8], traces = c(10)) %>% 
+  style(name = sh_info[9], traces = c(11)))
+}
+
+```
+
+
+```{r}
+luc_names <- c("Commercial", "Conservation_lu", "Cropland", "Industrial", "Pasture",
+               "Recreation", "Residential HD", "Residential LD", "Timber", "Wetlands")
+for (ui in 1:length(C_matrix_2[[1]])) {
+  selected_row <- filter(C_matrix_2, user_name == C_matrix_2[ui,5], submission == C_matrix_2[ui,6])
+  # Create an empty 11x11 matrix
+  adjacency_matrix <- matrix(0, nrow = 10, ncol = 10)
+  # Fill the matrix
+  for (i in 0:9) {
+    for (j in 0:9) {
+      ii = i + (i >= 4)
+      jj = j + (j >= 4)
+      col_name <- paste("luc", ii, jj, sep = "_")
+      adjacency_matrix[i, j] <- selected_row[[col_name]]
+    }
+  }
+  rownames(adjacency_matrix) <- luc_names
+  colnames(adjacency_matrix) <- luc_names  
+  # Print the matrix
+  print(adjacency_matrix)
+}
+```
+
+
+
+
+
 
