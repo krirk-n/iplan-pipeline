@@ -36,10 +36,6 @@ submissions_by_mapid = submissions.fetchByExample(example, batchSize = 40, count
 # get map by id
 map_json=user_db.get_map(mapid,rawResults=True)
 init_map=map_json
-
-map_id_json = mapid + ".json"
-with open(r["wd"] + "/data/" + map_id_json, 'w') as f:
-    json.dump(map_json, f)
     
 d = json.dumps(init_map)
 init_map_name = mapid + "_init_map.json"
@@ -47,7 +43,6 @@ with open(r["wd"] + "/data/" + init_map_name, "w") as c:
     c.write(d)
     c.close()
 
-biome = map_json["biome"]
 # extract information about stakeholders (representatives)
 reps = []
 for i in map_json['indicators']:

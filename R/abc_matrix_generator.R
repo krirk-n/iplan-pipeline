@@ -55,7 +55,7 @@ a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
 
 # c matrix generating helper function
 c_matrix_data_processing_helper = function(mapid, submission_data){
-  base_data = jsonlite::read_json(paste0(wd, "/data/", mapid, ".json", sep = ""))
+  base_data = jsonlite::read_json(paste0(wd, "/data/", mapid, "_init_map.json", sep = ""))
   total_submission = length(submission_data)
   base_luc_vec = c()
   base_area_vec = c()

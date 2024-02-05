@@ -20,7 +20,7 @@ mapid = "23917296" # change it as appropriate
 samplesize <- 10000
 
 # generate important mapid JSON files: 
-reticulate::source_python("py/json_generator.py")
+reticulate::source_python("py/db_wrangler.py")
 
 # generate submission result RDS file:
 sub_result = submissions_by_mapid$response$result
@@ -28,9 +28,9 @@ sub_result_name = paste0(wd, "/data/", mapid, "a_sub_result_new.rds")
 saveRDS(sub_result, sub_result_name)
 
 # prepare data for ABC matrices generation:
-reticulate::source_python("py/preABC_generator.py")
+reticulate::source_python("py/preAB_processor.py")
 
-# ABc Matrices generator:
+# ABC Matrices generator:
 source("R/abc_matrix_generator.R")
 
 # if you want ONA graphs, please proceed to ONA_analysis.Rmd after run all the previous lines.

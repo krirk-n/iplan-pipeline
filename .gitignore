@@ -2,6 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+py/.ipynb_checkpoints
+py/__pycache__
 ONA_analysis.nb.html
 data/*
 !data/multipliers.json
