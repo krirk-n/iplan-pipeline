@@ -43,7 +43,7 @@ library(webshot)
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-mapid = "57718789"
+mapid = "23230129"
 # mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
@@ -54,7 +54,7 @@ A_matrix = read_csv(paste0(wd, mapid, "_a_matrix.csv"))
 B_matrix = read_csv(paste0(wd, mapid, "_b_matrix.csv"))
 C_matrix = read.csv(paste0(wd, mapid, "_c_matrix.csv"))
 sh_info = read.csv(paste0(wd, "LEM text - Stakeholders.csv"))
-A = jsonlite::read_json(paste0(wd, mapid, ".json"))
+A = jsonlite::read_json(paste0(wd, mapid, "_init_map.json"))
 reps = jsonlite::read_json(paste0(wd, mapid, "_reps.json"))
 sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy level
 ```

@@ -1,6 +1,6 @@
 # author: Krirk Nirunwiroj, 2023
 # For the best practice, you should run line by line and check the output and variables for any error that may occur.
-# If you are certain with the codes, you may click "Source" to quickly generate the A, B, and C matrices for the desired mapid.
+# If you are confident with the codes, you may click "Source" to quickly generate the A, B, and C matrices for the desired mapid.
 # In some cases, "R session aborted, fatal error" may occur. You should run line by line instead.
 
 rm(list = ls())
@@ -16,7 +16,7 @@ library(tidyverse)
 library(rENA)
 library(plotly)
 
-mapid = "23917296" # change it as appropriate
+mapid = "23230129" # change it as appropriate
 samplesize <- 10000
 
 # generate important mapid JSON files: 
