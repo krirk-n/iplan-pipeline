@@ -4,6 +4,9 @@ install.packages(c('foreach', 'doParallel', 'concatenate', 'RcppArmadillo', 'Lea
 # rENA
 install.packages('LA chapter/rENA_0.2.5.tar.gz', repos=NULL, type='source')
 
+# directedENA
+install.packages('LA chapter/directedENA_0.3.0.tar.gz', repos=NULL, type='source')
+
 # ONA
 install.packages('LA chapter/ona_0.1.1.tar.gz', repos=NULL, type='source')
 

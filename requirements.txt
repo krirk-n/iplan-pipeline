@@ -1,2 +1,3 @@
 lapack++
 gfortran
+libopenblas-dev
