@@ -1,0 +1,164 @@
+---
+title: "Story analysis of players"
+output: html_notebook
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+rm(list = ls())
+library("rstudioapi")
+setwd(dirname(getActiveDocumentContext()$path))
+```
+
+Uncomment and run this block if you haven't had these packages installed
+```{r}
+# install.packages("ona", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
+# install.packages("tma", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
+# install.packages("magrittr")
+```
+
+```{r include=FALSE, warning=FALSE}
+library(ona)
+library(tma)
+library(magrittr)
+library(rENA)
+library(tidyverse)
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+library(ggfortify)
+library(data.table)
+library(superheat)
+library(rjson)
+library(plotly)
+library(RColorBrewer)
+library(randomcoloR)
+library(rlist)
+library(webshot)
+```
+
+# 0. setting up constant variables (change as appropriate)
+```{r}
+mapid = "23230129"
+# mapid = "24096504"
+wd = paste0(getwd(), "/data/")
+```
+
+# 0. read A B C matrices and other relevant data
+```{r}
+A_matrix = read_csv(paste0(wd, mapid, "_a_matrix.csv"))
+B_matrix = read_csv(paste0(wd, mapid, "_b_matrix.csv"))
+C_matrix = read.csv(paste0(wd, mapid, "_c_matrix.csv"))
+sh_info = read.csv(paste0(wd, "LEM text - Stakeholders.csv"))
+A = jsonlite::read_json(paste0(wd, mapid, "_init_map.json"))
+reps = jsonlite::read_json(paste0(wd, mapid, "_reps.json"))
+sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy level
+```
+
+```{r}
+name_col = sh_name
+ind_col = c()
+dir_col = c()
+group_col = c()
+for (i in 1:length(A$indicators)) {
+  for (j in 1:length(A$indicators[[i]]$stakeholders)) {
+    ind_col <- append(ind_col, A$indicators[[i]]$stakeholders[[j]]$indKey)
+    dir_col <- append(dir_col, A$indicators[[i]]$stakeholders[[j]]$direction)
+    group_col <- append(group_col, A$indicators[[i]]$stakeholders[[j]]$stakeholderGroup)
+  }
+}
+sh_df <- data.frame(name = name_col, indicator = ind_col, direction = dir_col, group = group_col)
+sh_df
+```
+
+```{r}
+business <- sh_df %>% filter(group == "Local Business Consortium")
+business <- business$name
+environmental <- sh_df %>% filter(group == "Environmental Justice Center")
+environmental <- environmental$name
+community <- sh_df %>% filter(group == "Community Coalition")
+community <- community$name
+```
+
+```{r}
+submission_name = C_matrix$user_name
+submission_order = c()
+sub_approval_count = c()
+sub_order_num= c()
+
+
+for (i in 1:length(sub_result)){
+  submission_order = append(submission_order, sub_result[[i]]$userKey)
+  sub_order_num = append(sub_order_num, sub_result[[i]]$submissionCount)
+  sub_approval_count = append(sub_approval_count, sub_result[[i]]$approvalCount)
+}
+```
+
+```{r}
+submission_df <- data.frame(userKey = submission_order, submissionCount = sub_order_num, approvalCount = sub_approval_count)
+uniqueUsers <- unique(submission_df$userKey)
+print(submission_df)
+print(uniqueUsers)
+```
+
+Filter only users with more than 2 submissions
+```{r}
+uniqueUsers_filtered <- submission_df %>%
+  group_by(userKey) %>% 
+  summarise(Count = n()) %>%
+  filter(Count > 2)
+
+uniqueUsers_filtered <- uniqueUsers_filtered$userKey
+```
+
+```{r}
+numPlots <- 7 # adjust as appropriate
+batchSize <- ceiling(length(uniqueUsers_filtered) / numPlots)
+
+for (i in 1:numPlots) {
+  batch <- submission_df %>% filter(userKey %in% uniqueUsers_filtered[(((i-1) * batchSize) + 1):(min(length(uniqueUsers_filtered), i * batchSize))])
+  
+  # Create a line plot using ggplot2
+  p <- ggplot(batch, aes(x = submissionCount, y = approvalCount, color = userKey, linetype = userKey)) +
+    geom_line(size=1) +
+    scale_x_continuous(breaks = 1:nrow(submission_df), labels = 1:nrow(submission_df), minor_breaks = NULL) +
+    scale_y_continuous(breaks = seq(0, max(submission_df$approvalCount), by = 1), minor_breaks = NULL) +
+    theme_minimal()
+  print(p)
+}
+```
+
+```{r}
+sh_name = A_matrix %>%
+  select(c(Name)) %>%
+  unique() %>%
+  pull()
+```
+
+```{r}
+sh_info = sh_info %>% 
+  filter(Name %in% sh_name) %>% 
+  arrange(match(Name, sh_name)) %>% 
+  unite("SHinfo", Name:Direction, remove = TRUE) %>% 
+  pull()
+```
+
+```{r}
+submission_df
+```
+
+
+```{r}
+# Create the stacked bar plot
+ggplot(df, aes(x = Category, y = Value, fill = Subcategory)) +
+  geom_bar(stat = "identity", position = "stack") +
+  theme_minimal() +
+  ggtitle("Stacked Bar Plot Example") +
+  xlab("Category") +
+  ylab("Value")
+```
+

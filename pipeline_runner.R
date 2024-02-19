@@ -20,7 +20,7 @@ mapid = "23230129" # change it as appropriate
 samplesize <- 10000
 
 # generate important mapid JSON files: 
-reticulate::source_python("py/db_wrangler.py")
+reticulate::source_python("py/db_wrangler.py") # for the small mapids, you may want to reduce batchSize for a faster runtime.
 
 # generate submission result RDS file:
 sub_result = submissions_by_mapid$response$result
