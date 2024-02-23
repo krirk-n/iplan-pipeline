@@ -39,6 +39,7 @@ library(RColorBrewer)
 library(randomcoloR)
 library(rlist)
 library(webshot)
+library(patchwork)
 ```
 
 # 0. setting up constant variables (change as appropriate)
@@ -57,6 +58,21 @@ sh_info = read.csv(paste0(wd, "LEM text - Stakeholders.csv"))
 A = jsonlite::read_json(paste0(wd, mapid, "_init_map.json"))
 reps = jsonlite::read_json(paste0(wd, mapid, "_reps.json"))
 sub_result = readRDS(paste0(wd, mapid, "a_sub_result_new.rds")) #record satisfy level
+```
+
+```{r}
+sh_name = A_matrix %>%
+  select(c(Name)) %>%
+  unique() %>%
+  pull()
+```
+
+```{r}
+sh_info = sh_info %>% 
+  filter(Name %in% sh_name) %>% 
+  arrange(match(Name, sh_name)) %>% 
+  unite("SHinfo", Name:Direction, remove = TRUE) %>% 
+  pull()
 ```
 
 ```{r}
@@ -132,33 +148,76 @@ for (i in 1:numPlots) {
 }
 ```
 
+Prepare dataframe for stacked barplot
 ```{r}
-sh_name = A_matrix %>%
-  select(c(Name)) %>%
-  unique() %>%
-  pull()
+submission_detailed_df <- data.frame(userKey = character(), submissionCount = integer(), business = integer(),
+                                     businessMax = integer(), environmental = integer(), environmentalMax = integer(),
+                                     community = integer(), communityMax = integer())
+for (i in 1:length(sub_result)) {
+  if (sub_result[[i]]$userKey %in% uniqueUsers_filtered) {
+    b_max = sum(business %in% sub_result[[i]]$stakeholders)
+    e_max = sum(environmental %in% sub_result[[i]]$stakeholders)
+    c_max = sum(community %in% sub_result[[i]]$stakeholders)
+    b_select = sub_result[[i]]$stakeholders[sub_result[[i]]$stakeholders %in% business]
+    e_select = sub_result[[i]]$stakeholders[sub_result[[i]]$stakeholders %in% environmental]
+    c_select = sub_result[[i]]$stakeholders[sub_result[[i]]$stakeholders %in% community]
+    b_count = 0
+    e_count = 0
+    c_count = 0
+    for (b in b_select) {
+      b_count = b_count + sub_result[[i]]$stakeholderApproval[[b]]
+    }
+    for (e in e_select) {
+      e_count = e_count + sub_result[[i]]$stakeholderApproval[[e]]
+    }
+    for (c in c_select) {
+      c_count = c_count + sub_result[[i]]$stakeholderApproval[[c]]
+    }
+    submission_detailed_df <- rbind(submission_detailed_df, data.frame(userKey = sub_result[[i]]$userKey,
+                                    submissionCount = sub_result[[i]]$submissionCount, business = b_count,
+                                    businessMax = b_max, environmental = e_count, environmentalMax = e_max,
+                                    community = c_count, communityMax = c_max))
+  }
+}
+
 ```
 
-```{r}
-sh_info = sh_info %>% 
-  filter(Name %in% sh_name) %>% 
-  arrange(match(Name, sh_name)) %>% 
-  unite("SHinfo", Name:Direction, remove = TRUE) %>% 
-  pull()
-```
 
 ```{r}
-submission_df
+for (user in uniqueUsers_filtered) {
+  b_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
+    geom_bar(aes(y = businessMax), stat = "identity", fill = "lightblue", position = "dodge") +
+    geom_bar(aes(y = business), stat = "identity", fill = "blue", position = "dodge") +
+    labs(title = "Business",
+         x = "submissionCount",
+         y = "count",
+         fill = "Variable") +
+    theme_minimal() +
+    geom_text(aes(y = businessMax, label = businessMax), vjust = -0.5) +
+    geom_text(aes(y = business, label = business), vjust = 1.5)
+  
+  e_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
+    geom_bar(aes(y = environmentalMax), stat = "identity", fill = "lightgreen", position = "dodge") +
+    geom_bar(aes(y = environmental), stat = "identity", fill = "forestgreen", position = "dodge") +
+    labs(title = "Environmental",
+         x = "submissionCount",
+         y = "count",
+         fill = "Variable") +
+    theme_minimal() +
+    geom_text(aes(y = environmentalMax, label = environmentalMax), vjust = -0.5) +
+    geom_text(aes(y = environmental, label = environmental), vjust = 1.5)
+  
+  c_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
+    geom_bar(aes(y = communityMax), stat = "identity", fill = "peachpuff", position = "dodge") +
+    geom_bar(aes(y = community), stat = "identity", fill = "darkorange", position = "dodge") +
+    labs(title = "Community",
+         x = "submissionCount",
+         y = "count",
+         fill = "Variable") +
+    theme_minimal() +
+    geom_text(aes(y = communityMax, label = communityMax), vjust = -0.5) +
+    geom_text(aes(y = community, label = community), vjust = 1.5)
+  
+  print(b_plot / e_plot / c_plot)
+}
 ```
-
-
-```{r}
-# Create the stacked bar plot
-ggplot(df, aes(x = Category, y = Value, fill = Subcategory)) +
-  geom_bar(stat = "identity", position = "stack") +
-  theme_minimal() +
-  ggtitle("Stacked Bar Plot Example") +
-  xlab("Category") +
-  ylab("Value")
-```
-
