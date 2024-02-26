@@ -7,8 +7,8 @@ install.packages('LA chapter/rENA_0.2.5.tar.gz', repos=NULL, type='source')
 # directedENA
 install.packages('LA chapter/directedENA_0.3.0.tar.gz', repos=NULL, type='source')
 
-# ONA
-install.packages('LA chapter/ona_0.1.1.tar.gz', repos=NULL, type='source')
+install.packages("ona", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
 
-# tma
-install.packages('LA chapter/tma_0.1.2.tar.gz', repos=NULL, type='source')
+install.packages("tma", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
+
+install.packages("magrittr")

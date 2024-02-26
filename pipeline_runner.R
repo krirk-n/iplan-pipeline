@@ -5,8 +5,8 @@
 
 rm(list = ls())
 
-library("rstudioapi")
-setwd(dirname(getActiveDocumentContext()$path))
+# library("rstudioapi")
+# setwd(dirname(getActiveDocumentContext()$path))
 
 # please make sure your working directory is set to this file location
 wd = getwd()
@@ -16,7 +16,8 @@ library(tidyverse)
 library(rENA)
 library(plotly)
 
-mapid = "23230129" # change it as appropriate
+# mapid = "23230129" # change it as appropriate
+mapid = "24096504"
 samplesize <- 10000
 
 # generate important mapid JSON files: 

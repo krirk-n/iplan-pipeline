@@ -234,3 +234,414 @@ for (user in uniqueUsers_filtered) {
     plot_annotation(title = user))
 }
 ```
+
+## ONA Section
+
+
+
+# 1. combine conservation and limited use and set self-connection to zero
+which means luc_1_X + luc_4_X, luc_X_1 + luc_X_4
+```{r}
+A_matrix_2 <- A_matrix
+B_matrix_2 <- B_matrix
+C_matrix_2 <- C_matrix
+for (i in 1:11) {
+  A_luc1x = which(names(A_matrix_2)==paste0("luc_", 1, "_", i-1))
+  A_luc4x = which(names(A_matrix_2)==paste0("luc_", 4, "_", i-1))
+  B_luc1x = which(names(B_matrix_2)==paste0("luc_", 1, "_", i-1))
+  B_luc4x = which(names(B_matrix_2)==paste0("luc_", 4, "_", i-1))
+  C_luc1x = which(names(C_matrix_2)==paste0("luc_", 1, "_", i-1))
+  C_luc4x = which(names(C_matrix_2)==paste0("luc_", 4, "_", i-1))
+  A_matrix_2[[A_luc1x]] <- A_matrix_2[[A_luc1x]] + A_matrix_2[[A_luc4x]]
+  B_matrix_2[[B_luc1x]] <- B_matrix_2[[B_luc1x]] + B_matrix_2[[B_luc4x]]
+  C_matrix_2[[C_luc1x]] <- C_matrix_2[[C_luc1x]] + C_matrix_2[[C_luc4x]]
+}
+for (i in 1:11) {
+  A_lucx1 = which(names(A_matrix_2)==paste0("luc_", i-1, "_", 1))
+  A_lucx4 = which(names(A_matrix_2)==paste0("luc_", i-1, "_", 4))
+  B_lucx1 = which(names(B_matrix_2)==paste0("luc_", i-1, "_", 1))
+  B_lucx4 = which(names(B_matrix_2)==paste0("luc_", i-1, "_", 4))
+  C_lucx1 = which(names(C_matrix_2)==paste0("luc_", i-1, "_", 1))
+  C_lucx4 = which(names(C_matrix_2)==paste0("luc_", i-1, "_", 4))
+  A_matrix_2[[A_lucx1]] <- A_matrix_2[[A_lucx1]] + A_matrix_2[[A_lucx4]]
+  B_matrix_2[[B_lucx1]] <- B_matrix_2[[B_lucx1]] + B_matrix_2[[B_lucx4]]
+  C_matrix_2[[C_lucx1]] <- C_matrix_2[[C_lucx1]] + C_matrix_2[[C_lucx4]]
+}
+for (i in 1:11) {
+  A_lucxx = which(names(A_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  B_lucxx = which(names(B_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  C_lucxx = which(names(C_matrix_2)==paste0("luc_", i-1, "_", i-1))
+  A_matrix_2[[A_lucxx]] = 0
+  B_matrix_2[[B_lucxx]] = 0
+  C_matrix_2[[C_lucxx]] = 0
+}
+
+A_matrix_2 <- A_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+B_matrix_2 <- B_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+C_matrix_2 <- C_matrix_2 %>% select(-c(luc_4_0, luc_4_1, luc_4_2, luc_4_3, luc_4_4, 
+                               luc_4_5, luc_4_6, luc_4_7, luc_4_8, luc_4_9, luc_4_10,
+                               luc_0_4, luc_1_4, luc_2_4, luc_3_4, luc_4_4,
+                               luc_5_4, luc_6_4, luc_7_4, luc_8_4, luc_9_4, luc_10_4))
+```
+
+# 2. make ABC col names consistent for the ease of later work
+```{r}
+colnames(A_matrix_2)[2] = "SH"
+A_matrix_2 <- A_matrix_2 %>%
+  select(-c(...1)) %>% 
+  add_column(user_name = "NA", .before = "luc_0_0") %>%
+  add_column(submission = "NA",.before = "luc_0_0") %>%
+  add_column(index = 1:nrow(A_matrix), .before = "SH")
+```
+
+```{r}
+colnames(B_matrix_2)[2] = "SH"
+B_matrix_2 <- B_matrix_2 %>%
+  select(-c(...1)) %>% 
+  add_column(user_name = "NA", .before = "luc_0_0") %>%
+  add_column(submission = "NA",.before = "luc_0_0") %>%
+  add_column(index = 1:nrow(B_matrix), .before = "SH")
+```
+
+```{r}
+C_matrix_2 <- C_matrix_2 %>%
+  add_column(index = 1:nrow(C_matrix_2), .before = "user_name") %>%
+  add_column(Name = "NA", .before = "user_name") %>%
+  add_column(Satisfy = "NA",.before = "user_name") %>%
+  add_column(N = "NA", .before = "user_name")
+```
+
+# 3.run ONA
+call generate.ona.object function
+```{r generate.ona.object}
+generate.ona.object <- function(data, unit.col, meta.col, codes){
+  output <- list()
+  f.units <- unit.col
+  ENA_UNIT <- rENA::merge_columns_c(f.units, cols = colnames(f.units));
+  # ENA_UNIT <-  f.units
+  f.raw <- data
+  f.codes <- codes
+  dena_data = directedENA:::ena.set.directed(f.raw, f.units, NA, f.codes)
+  output.meta.data <- meta.col
+  dena_data$meta.data <- data.table::as.data.table(cbind(ENA_UNIT, output.meta.data))
+  for( i in colnames(dena_data$meta.data) ) {
+    set(dena_data$meta.data, j = i, value = rENA::as.ena.metadata(dena_data$meta.data[[i]]))
+  }
+  code_length <- length(dena_data$rotation$codes);
+  dena_data$rotation$adjacency.key <- data.table::data.table(matrix(c(
+    rep(1:code_length, code_length),
+    rep(1:code_length, each = code_length)),
+    byrow = TRUE, nrow = 2
+  ))
+  directed.adjacency.vectors <- as.ena.matrix(data.table::as.data.table(data[, grep("V", colnames(data))]), "ena.connections")
+  # aren't these two the same thing 
+  dena_data$connection.counts <- data.table::as.data.table(cbind(dena_data$meta.data, directed.adjacency.vectors))
+  dena_data$connection.counts = rENA::as.ena.matrix(x = dena_data$connection.counts, "ena.connections")
+  for (i in which(!rENA::find_meta_cols(dena_data$connection.counts)))
+    set(dena_data$connection.counts, j = i, value = as.ena.co.occurrence(as.double(dena_data$connection.counts[[i]])))
+  dena_data$model$row.connection.counts = data.table::as.data.table(cbind(dena_data$meta.data, directed.adjacency.vectors))
+  dena_data$model$row.connection.counts <- rENA::as.ena.matrix(dena_data$model$row.connection.counts, "row.connections")
+  output = dena_data;
+  return(output)
+}
+```
+
+```{r}
+# 1. prepare df
+
+# df <- A_matrix
+# df <- B_matrix
+df <- C_matrix_2
+
+names(df)[7:106] <- paste0("V",seq(1:100))
+df$mapid = mapid
+
+# 2. accum
+accumC <- generate.ona.object(
+  df,
+  unit.col = df[,1:7],
+  meta.col = df[,1:7],
+  codes = as.vector(
+    c("Commercial",
+    "Conservation_lu",
+    # "Conservation",
+    "Cropland",
+    "Industrial",
+    # "Limited Use",
+    "Pasture",
+    "Recreation",
+    "Residential HD",
+    "Residential LD",
+    "Timber",
+    "Wetlands")))
+
+# 3. model
+setC <- model(accumC)
+
+# 4. GoF
+correlations(setC)
+
+```
+
+```{r}
+# 1. prepare df
+
+df1 <- A_matrix_2
+# df <- B_matrix
+# df <- C_matrix
+
+names(df1)[7:106] <- paste0("V",seq(1:100))
+df1$mapid = mapid
+
+# 2. accum
+accumA <- generate.ona.object(
+  df1,
+  unit.col = df1[,1:7],
+  meta.col = df1[,1:7],
+  codes = as.vector(
+    c("Commercial",
+    "Conservation_lu",
+    # "Conservation",
+    "Cropland",
+    "Industrial",
+    # "Limited Use",
+    "Pasture",
+    "Recreation",
+    "Residential HD",
+    "Residential LD",
+    "Timber",
+    "Wetlands")))
+
+# 3. model
+setA <- model(accumA)
+
+# 4. GoF
+correlations(setA)
+```
+
+# 4. project C points into A space
+To do so, I need to make a set using C's accumulation and A's rotation matrix
+```{r}
+set=model(accumC, rotation.set = setA$rotation)
+```
+
+# 5. ona plotting 
+## 5.1 setting global visual parameters here so that all ONA plots we generate are on the same scale
+```{r}
+node_size_multiplier = 0.2
+node_position_multiplier = 1.0
+edge_size_multiplier = 0.2
+point_position_multiplier = 1.0
+edge_arrow_saturation_multiplier = 1.0
+```
+
+```{r}
+ona:::plot.ena.ordered.set(setC) %>% 
+  units( 
+    points = setC$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE)
+```
+
+## 5.2 quick check points ARE being rotated
+```{r}
+ona:::plot.ena.ordered.set(setA, title = "space used for projection and its points") %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = TRUE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+
+ona:::plot.ena.ordered.set(setC, title = "points need to be projected in its original space") %>%
+  units( 
+    points = setC$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE)%>%
+ nodes(
+    node_size_multiplier = 0.001) 
+
+ona:::plot.ena.ordered.set(set, title = "projected points in its new space") %>%
+  units(
+    points = set$points,
+    points_color = "black",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+```
+
+## Cluster Check:
+
+
+```{r}
+ona:::plot.ena.ordered.set(setA, title = "space used for projection and its points") %>%
+  units(
+    points = setA$points,
+    points_color = "gray",
+    show_mean = TRUE, show_points = TRUE, with_ci = FALSE) %>%
+ nodes(
+    node_size_multiplier = 0.001) 
+```
+
+```{r}
+A = setA$points[ENA_DIRECTION== 'response']
+```
+
+Plot both bar plots and ona plots by specifying user
+
+```{r}
+uniqueUsers_filtered
+```
+
+```{r}
+userkey = "AidanC126" # Change as appropriate
+
+subs <- as.list(unique(set$points$ENA_UNIT))
+subs <- subs[grepl(userkey, subs)] 
+ona_plots <- list()
+
+for (i in subs) {
+  p <- ona:::plot.ena.ordered.set(set, title = paste0(i)) %>%
+  edges(
+      weights = set$line.weights[ENA_UNIT == i],
+      edge_size_multiplier = edge_size_multiplier,
+      edge_arrow_saturation_multiplier = edge_arrow_saturation_multiplier,
+      node_position_multiplier = node_position_multiplier,
+      edge_color = c("red")) %>%
+  nodes(
+    node_size_multiplier = node_size_multiplier,
+    node_position_multiplier = node_position_multiplier,
+    self_connection_color = "red")  %>%
+  units(
+      points=set$points[ENA_UNIT == i],
+      points_color = "black",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = FALSE, show_points = TRUE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[1] & Satisfy == "Yes"],
+      points_color = "green",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[2] & Satisfy == "Yes"],
+      points_color = "blue",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[3] & Satisfy == "Yes"],
+      points_color = "brown",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[4] & Satisfy == "Yes"],
+      points_color = "purple",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[5] & Satisfy == "Yes"],
+      points_color = "yellow",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[6] & Satisfy == "Yes"],
+      points_color = "deeppink",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[7] & Satisfy == "Yes"],
+      points_color = "Tan",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[8] & Satisfy == "Yes"],
+      points_color = "Cyan",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE) %>%
+  units(
+      points = setA$points[SH == sh_name[9] & Satisfy == "Yes"],
+      points_color = "orange",
+      point_position_multiplier = point_position_multiplier,
+      show_mean = TRUE, show_points = FALSE, with_ci = FALSE)%>% 
+      plotly::layout(showlegend = TRUE, legend = list(x = 100, y = 0.9)) %>% 
+      style(name = "point", traces = c(2)) %>% 
+    style(name = sh_info[1], traces = c(3)) %>% 
+    style(name = sh_info[2], traces = c(4)) %>% 
+    style(name = sh_info[3], traces = c(5)) %>% 
+    style(name = sh_info[4], traces = c(6)) %>% 
+    style(name = sh_info[5], traces = c(7)) %>% 
+    style(name = sh_info[6], traces = c(8)) %>% 
+    style(name = sh_info[7], traces = c(9)) %>% 
+    style(name = sh_info[8], traces = c(10)) %>% 
+    style(name = sh_info[9], traces = c(11))
+  ona_plots[[i]] <- p
+}
+
+```
+
+```{r}
+bar_width = 0.5
+dodge_width <- 0  # Adjust this as needed
+expand_mults <- c(0, 0.5)
+submissionCount_levels <- as.character(unique(submission_detailed_df$submissionCount))
+
+b_plot <- ggplot(submission_detailed_df %>% filter(userKey == userkey), aes(x = factor(submissionCount))) +
+  geom_bar(aes(y = businessMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+  geom_bar(aes(y = business), stat = "identity", fill = "cornflowerblue", position = position_dodge(width = dodge_width), width = bar_width) +
+  labs(title = "Business",
+       x = "submissionCount",
+       y = "count",
+       fill = "Variable") +
+  theme_minimal()
+# +
+#   scale_x_discrete(expand = expand_scale(mult = expand_mults, add = c(0, 0)))
+# Assuming the range of your y-axis is known or can be calculated:
+y_max <- max(submission_detailed_df$businessMax, na.rm = TRUE)
+# Create a sequence from 1 to the maximum value of y, by 1 unit interval
+hlines <- seq(1, y_max, by = 1)
+# Add horizontal lines to the plot
+b_plot <- b_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
+
+e_plot <- ggplot(submission_detailed_df %>% filter(userKey == userkey), aes(x = factor(submissionCount))) +
+  geom_bar(aes(y = environmentalMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+  geom_bar(aes(y = environmental), stat = "identity", fill = "forestgreen", position = position_dodge(width = dodge_width), width = bar_width) +
+  labs(title = "Environmental",
+       x = "submissionCount",
+       y = "count",
+       fill = "Variable") +
+  theme_minimal()
+y_max <- max(submission_detailed_df$environmentalMax, na.rm = TRUE)
+hlines <- seq(1, y_max, by = 1)
+e_plot <- e_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
+
+c_plot <- ggplot(submission_detailed_df %>% filter(userKey == userkey), aes(x = factor(submissionCount))) +
+  geom_bar(aes(y = communityMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+  geom_bar(aes(y = community), stat = "identity", fill = "darkorange", position = position_dodge(width = dodge_width), width = bar_width) +
+  labs(title = "Community",
+       x = "submissionCount",
+       y = "count",
+       fill = "Variable") +
+  theme_minimal()
+y_max <- max(submission_detailed_df$communityMax, na.rm = TRUE)
+hlines <- seq(1, y_max, by = 1)
+c_plot <- c_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
+
+print((b_plot / e_plot / c_plot) +
+  plot_annotation(title = userkey))
+
+for (p in ona_plots) {
+  print(p)
+}
+```
+
+
+
