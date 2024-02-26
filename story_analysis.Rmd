@@ -184,40 +184,53 @@ for (i in 1:length(sub_result)) {
 
 
 ```{r}
+bar_width = 0.5
+dodge_width <- 0  # Adjust this as needed
+expand_mults <- c(0, 0.5)
+submissionCount_levels <- as.character(unique(submission_detailed_df$submissionCount))
 for (user in uniqueUsers_filtered) {
   b_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
-    geom_bar(aes(y = businessMax), stat = "identity", fill = "lightblue", position = "dodge") +
-    geom_bar(aes(y = business), stat = "identity", fill = "blue", position = "dodge") +
+    geom_bar(aes(y = businessMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+    geom_bar(aes(y = business), stat = "identity", fill = "cornflowerblue", position = position_dodge(width = dodge_width), width = bar_width) +
     labs(title = "Business",
          x = "submissionCount",
          y = "count",
          fill = "Variable") +
-    theme_minimal() +
-    geom_text(aes(y = businessMax, label = businessMax), vjust = -0.5) +
-    geom_text(aes(y = business, label = business), vjust = 1.5)
+    theme_minimal()
+  # +
+  #   scale_x_discrete(expand = expand_scale(mult = expand_mults, add = c(0, 0)))
+  # Assuming the range of your y-axis is known or can be calculated:
+  y_max <- max(submission_detailed_df$businessMax, na.rm = TRUE)
+  # Create a sequence from 1 to the maximum value of y, by 1 unit interval
+  hlines <- seq(1, y_max, by = 1)
+  # Add horizontal lines to the plot
+  b_plot <- b_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
   
   e_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
-    geom_bar(aes(y = environmentalMax), stat = "identity", fill = "lightgreen", position = "dodge") +
-    geom_bar(aes(y = environmental), stat = "identity", fill = "forestgreen", position = "dodge") +
+    geom_bar(aes(y = environmentalMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+    geom_bar(aes(y = environmental), stat = "identity", fill = "forestgreen", position = position_dodge(width = dodge_width), width = bar_width) +
     labs(title = "Environmental",
          x = "submissionCount",
          y = "count",
          fill = "Variable") +
-    theme_minimal() +
-    geom_text(aes(y = environmentalMax, label = environmentalMax), vjust = -0.5) +
-    geom_text(aes(y = environmental, label = environmental), vjust = 1.5)
+    theme_minimal()
+  y_max <- max(submission_detailed_df$environmentalMax, na.rm = TRUE)
+  hlines <- seq(1, y_max, by = 1)
+  e_plot <- e_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
   
   c_plot <- ggplot(submission_detailed_df %>% filter(userKey == user), aes(x = factor(submissionCount))) +
-    geom_bar(aes(y = communityMax), stat = "identity", fill = "peachpuff", position = "dodge") +
-    geom_bar(aes(y = community), stat = "identity", fill = "darkorange", position = "dodge") +
+    geom_bar(aes(y = communityMax), stat = "identity", fill = "gainsboro", position = position_dodge(width = dodge_width), width = bar_width) +
+    geom_bar(aes(y = community), stat = "identity", fill = "darkorange", position = position_dodge(width = dodge_width), width = bar_width) +
     labs(title = "Community",
          x = "submissionCount",
          y = "count",
          fill = "Variable") +
-    theme_minimal() +
-    geom_text(aes(y = communityMax, label = communityMax), vjust = -0.5) +
-    geom_text(aes(y = community, label = community), vjust = 1.5)
+    theme_minimal()
+  y_max <- max(submission_detailed_df$communityMax, na.rm = TRUE)
+  hlines <- seq(1, y_max, by = 1)
+  c_plot <- c_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
   
-  print(b_plot / e_plot / c_plot)
+  print((b_plot / e_plot / c_plot) +
+    plot_annotation(title = user))
 }
 ```
