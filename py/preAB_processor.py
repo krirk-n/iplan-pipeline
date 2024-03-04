@@ -171,7 +171,7 @@ for i in sh_list:
     
     
     while satisfy_count < 50: 
-        temp_list = list(range(200))
+        temp_list = list(range(200)) # change 200 to len(luc_list))
         if len(parcel_already_satisfied_index) != 0 : 
             for idx in parcel_already_satisfied_index: 
                 temp_list.remove(idx)
@@ -236,7 +236,7 @@ for i in sh_list:
             overall_iteration+=1
 
     while unsatisfy_count < 50: 
-        temp_list = list(range(200))
+        temp_list = list(range(200)) # change 200 to len(luc_list))
         if len(parcel_already_unsatisfied_index) != 0 : 
             for idx in parcel_already_unsatisfied_index: 
                 temp_list.remove(idx)
