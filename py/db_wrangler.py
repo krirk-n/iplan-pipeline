@@ -31,7 +31,7 @@ user_db.connect()
 map_by_id = user_db.get_map(mapid, rawResults=True)
 submissions = user_db.get_submissions_collection()
 example = { 'mapKey': mapid }
-submissions_by_mapid = submissions.fetchByExample(example, batchSize = 500, count = True) # you can reduce bacthSize for faster runtime, but you must be certain that there are less submissions in that mapid.
+submissions_by_mapid = submissions.fetchByExample(example, batchSize = 1100, count = True) # you can reduce bacthSize for faster runtime, but you must be certain that there are less submissions in that mapid.
 
 # get map by id
 map_json=user_db.get_map(mapid,rawResults=True)

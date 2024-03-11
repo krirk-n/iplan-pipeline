@@ -16,8 +16,9 @@ library(tidyverse)
 library(rENA)
 library(plotly)
 
-# mapid = "23230129" # change it as appropriate
-mapid = "24096504"
+# change it as appropriate
+mapid = "21078015"
+# mapid = "57718789"
 samplesize <- 10000
 
 # generate important mapid JSON files: 

@@ -16,7 +16,8 @@ library(rlist)
 
 # a and b matrix generating function
 a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
-  data = read.csv(paste0(wd, "/data/new_final_result_", mapid,".csv"))
+  data = read.csv(paste0(wd, "/data/new_final_result_", mapid,".csv"), check.names = FALSE)
+  data = handle_missing_luc(data)
   data_1 = separate(data, index, into = c("Name", "Satisfy", "N"))
   data_1$N = as.numeric(data_1$N)
   luc_idx_reverse = c()
@@ -53,9 +54,38 @@ a_b_matrix_data_processing = function(mapid, start_idx = 4, end_idx = 124){
   return(data_1)
 }
 
+handle_missing_luc = function(data){
+  
+  # Vector of desired column names in the specific order
+  desired_columns <- c("index",
+    "20_20", "20_31", "20_50", "20_21", "20_30", "20_60", "20_22", "20_23", "20_24", "20_40", "20_10",
+    "31_20", "31_31", "31_50", "31_21", "31_30", "31_60", "31_22", "31_23", "31_24", "31_40", "31_10",
+    "50_20", "50_31", "50_50", "50_21", "50_30", "50_60", "50_22", "50_23", "50_24", "50_40", "50_10",
+    "21_20", "21_31", "21_50", "21_21", "21_30", "21_60", "21_22", "21_23", "21_24", "21_40", "21_10",
+    "30_20", "30_31", "30_50", "30_21", "30_30", "30_60", "30_22", "30_23", "30_24", "30_40", "30_10",
+    "60_20", "60_31", "60_50", "60_21", "60_30", "60_60", "60_22", "60_23", "60_24", "60_40", "60_10",
+    "22_20", "22_31", "22_50", "22_21", "22_30", "22_60", "22_22", "22_23", "22_24", "22_40", "22_10",
+    "23_20", "23_31", "23_50", "23_21", "23_30", "23_60", "23_22", "23_23", "23_24", "23_40", "23_10",
+    "24_20", "24_31", "24_50", "24_21", "24_30", "24_60", "24_22", "24_23", "24_24", "24_40", "24_10",
+    "40_20", "40_31", "40_50", "40_21", "40_30", "40_60", "40_22", "40_23", "40_24", "40_40", "40_10",
+    "10_20", "10_31", "10_50", "10_21", "10_30", "10_60", "10_22", "10_23", "10_24", "10_40", "10_10"
+  )
+
+  # Iterate over each desired column
+  for (col in desired_columns[2:(length(desired_columns)-1)]) {
+    if (!col %in% colnames(data)) {
+      # If the column does not exist, create it with all values set to 0
+      data[[col]] <- 0
+    }
+  }
+  
+  # Reorder the dataframe columns to match the desired order
+  data <- data[, desired_columns]
+  return(data)
+}
+
 # c matrix generating helper function
-c_matrix_data_processing_helper = function(mapid, submission_data){
-  base_data = jsonlite::read_json(paste0(wd, "/data/", mapid, "_init_map.json", sep = ""))
+c_matrix_data_processing_helper = function(mapid, submission_data, base_data){
   total_submission = length(submission_data)
   base_luc_vec = c()
   base_area_vec = c()
@@ -71,7 +101,7 @@ c_matrix_data_processing_helper = function(mapid, submission_data){
     submission_luc_vec_name = paste0("submitted",sep = "_", i)
     submission_luc_vec_name_vec = append(submission_luc_vec_name_vec, submission_luc_vec_name)
   }
-  df_sub_data = data.frame(matrix(ncol = length(submission_data), nrow = 200))
+  df_sub_data = data.frame(matrix(ncol = length(submission_data), nrow = length(base_data$parcels)))
   colnames(df_sub_data) = submission_luc_vec_name_vec
   for (i in 1:length(submission_data)){
     df_sub_data[i] = submission_data[[i]]$lucs
@@ -105,7 +135,7 @@ c_matrix_data_processing_helper = function(mapid, submission_data){
   
   col_name = luc_idx_reverse
   
-  #create data frame with 1rows and 121 columns
+  #create data frame with 121 columns
   merged_data = data.frame(matrix(ncol = 121, nrow = length(submission_data)))
   
   #provide column names
@@ -188,9 +218,10 @@ c_matrix_data_processing_helper = function(mapid, submission_data){
 }
 
 # c matrix generating function
-c_matrix_data_processing = function(mapid, ordered = TRUE, submission_data = readRDS(paste0(wd, "/data/", mapid, "a_sub_result_new.rds"))){
+c_matrix_data_processing = function(mapid, ordered = FALSE, submission_data = readRDS(paste0(wd, "/data/", mapid, "a_sub_result_new.rds"))){
+  base_data = jsonlite::read_json(paste0(wd, "/data/", mapid, "_init_map.json", sep = ""))
   if (ordered == TRUE){
-    c_matrix_data_processing_helper(mapid, submission_data)
+    c_matrix_data_processing_helper(mapid, submission_data, base_data)
   }
   else{
     user_keys <- character()
@@ -200,7 +231,7 @@ c_matrix_data_processing = function(mapid, ordered = TRUE, submission_data = rea
     unique_user_keys <- unique(user_keys)
     for (i in 1:length(unique_user_keys)){
       partial_data <- list.filter(submission_data, userKey == unique_user_keys[i])
-      c_matrix_data_processing_helper(mapid, partial_data)
+      c_matrix_data_processing_helper(mapid, partial_data, base_data)
     }
   }
 }
