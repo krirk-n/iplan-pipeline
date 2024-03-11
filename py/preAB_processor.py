@@ -1,12 +1,10 @@
 '''
-authors:
-Binrui Yang
-Krirk Nirunwiroj
+authors: Binrui Yang, Krirk Nirunwiroj
 '''
+
 import sys
 import json
 import pandas as pd 
-import math
 import numpy as np
 import random
 from collections import OrderedDict
@@ -21,40 +19,33 @@ mapid = r["mapid"] # set your mapid here or you can pass it in the command line 
 if len(sys.argv) == 2 and len(sys.argv[1]) == 8:
     mapid = sys.argv[1]
     
-# Opening JSON file
+with open(r["wd"] + "/data/" + mapid + "_init_map.json") as f:
+    init = json.load(f)
 
-d = open(r["wd"] + "/data/" + mapid + "_init_map.json") # generated from pipline
+# Assuming 'multipliers.json' is needed, uncomment and use as needed
+# with open(r["wd"] + "/data/" + 'multipliers.json') as f:
+#     multiplier = json.load(f)
 
-f = open(r["wd"] + "/data/" + 'multipliers.json') # TODO: find a more effective way for more general cases
+with open(r["wd"] + "/data/" + mapid + "_reps.json") as f:
+    reps = json.load(f)
 
-g = open(r["wd"] + "/data/" + mapid + "_reps.json") # generated from pipline #Name, Indicator, Threshold
+# Building the indicators keys multiplier table
+indicator_keys_mult_table = {
+    rep["Indicator"]: {init_luc["zone"]: init_luc["multipliers"][rep["Indicator"]] 
+                       for init_luc in init["lucs"]} 
+    for rep in reps
+}
 
-init = json.load(d)
-# multiplier = json.load(f)
-reps = json.load(g)
+# Initializing dictionaries for significant and insignificant multipliers
+sign_multiplier_dict = {key: {} for key in indicator_keys_mult_table.keys()}
+insign_multiplier_dict = copy.deepcopy(sign_multiplier_dict)  # Deep copy to avoid reference issues
 
-indicator_keys_mult_table = dict()
-
-for i in range(len(reps)):
-    indicator_keys_mult_table[reps[i]["Indicator"]] = dict()
-
-for i in indicator_keys_mult_table.keys():
-    for j in range(len(init["lucs"])):
-        zone = init["lucs"][j]["zone"]
-        indicator_keys_mult_table[i][zone] = init['lucs'][j]["multipliers"][i]
-        
-sign_multiplier_dict = dict()
-insign_multiplier_dict = dict()
-for i in indicator_keys_mult_table.keys():
-    sign_multiplier_dict[i] = dict()
-    insign_multiplier_dict[i] = dict()
-
-# MAD method    
+# Applying modified MAD method
+threshold_multiplier = 5  # you can change it as appropriate  
 for key in indicator_keys_mult_table.keys():
     values = np.array(list(indicator_keys_mult_table[key].values()))
     median = np.median(values)
     mad = np.median(np.abs(values - median))
-    threshold_multiplier = 5 # you can change it as appropriate
     threshold_value = int(median + (threshold_multiplier * mad))
     sign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] >= threshold_value, indicator_keys_mult_table[key].items()))
     insign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] < threshold_value, indicator_keys_mult_table[key].items()))
@@ -62,25 +53,23 @@ for key in indicator_keys_mult_table.keys():
         min_value = min(indicator_keys_mult_table[key].values())
         sign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] > min_value, indicator_keys_mult_table[key].items()))
         insign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] == min_value, indicator_keys_mult_table[key].items()))
-        
-matrix = {}
-parcels = {}
-for l in init["lucs"]:
-    parcels[l["zone"]] = {
-        'area': 0,
-        'parcels': 0,
-        'name': l["name"]
-    }
-    matrix[l['zone']] = l['multipliers']
-    
+    elif len(sign_multiplier_dict[key]) == 0: # handle empty dict
+        max_value = max(indicator_keys_mult_table[key].values())
+        insign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] < max_value, indicator_keys_mult_table[key].items()))
+        sign_multiplier_dict[key] = dict(filter(lambda elem: elem[1] == max_value, indicator_keys_mult_table[key].items()))
+
+# Parcel processing
+parcels = {l["zone"]: {'area': 0, 'parcels': 0, 'name': l["name"]} for l in init["lucs"]}
+matrix = {l['zone']: l['multipliers'] for l in init["lucs"]}
+
 for p in init['parcels']:
     pKey = p['properties']['LUC']
     parcel_area = float(p['properties']['Area'])
     parcels[pKey]['area'] += parcel_area
     parcels[pKey]['parcels'] += 1
-    
+
 parcel_list = list(parcels.keys())
-_list = list()
+_list = [f"{i}_{j}" for i in parcel_list for j in parcel_list]
 
 for i in range(len(parcel_list)):
     for j in range(len(parcel_list)): 
@@ -124,7 +113,7 @@ for i in range(len(sh_list)):
         threshold_dict[sh_list[i]]["Yes"][j] = dict()
         threshold_dict[sh_list[i]]["No"][j] = dict()
         
-        
+# Processing each 'rep' for the satisfaction conditions
 for i in sh_list:
     sh = i
     for j in reps:
@@ -171,7 +160,11 @@ for i in sh_list:
     
     
     while satisfy_count < 50: 
-        temp_list = list(range(200)) # change 200 to len(luc_list))
+
+
+
+        temp_list = list(range(len(original_luc_list)))
+
         if len(parcel_already_satisfied_index) != 0 : 
             for idx in parcel_already_satisfied_index: 
                 temp_list.remove(idx)
@@ -236,7 +229,11 @@ for i in sh_list:
             overall_iteration+=1
 
     while unsatisfy_count < 50: 
-        temp_list = list(range(200)) # change 200 to len(luc_list))
+
+
+
+        temp_list = list(range(len(original_luc_list)))
+
         if len(parcel_already_unsatisfied_index) != 0 : 
             for idx in parcel_already_unsatisfied_index: 
                 temp_list.remove(idx)
@@ -302,6 +299,9 @@ for i in sh_list:
             unsatisfy_count +=1
             overall_iteration+=1
 
+
+# Final DataFrame preparation and saving
+
 df = pd.json_normalize(d, sep='_')
 e = df.to_dict(orient='records')[0]
 f = dict()
@@ -322,10 +322,10 @@ for i in e.keys():
             if k.startswith(str(change_from)):
                 if k.endswith(str(change_to)):
                     f[i][k] += area
-                    
+
 final_df = pd.DataFrame(f).T
 
 final_df.reset_index(inplace=True)
 final_df[final_df.columns[1:]] = final_df[final_df.columns[1:]]/init['area']
 df_name = "new_final_result_" + init["_key"] + ".csv"
-final_df.to_csv(r["wd"] + "/data/" + df_name, index=False)
+final_df.to_csv(r['wd'] + "/data/" + df_name, index=False)
