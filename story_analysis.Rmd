@@ -9,8 +9,8 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r}
 rm(list = ls())
-library("rstudioapi")
-setwd(dirname(getActiveDocumentContext()$path))
+# library("rstudioapi")
+# setwd(dirname(getActiveDocumentContext()$path))
 ```
 
 Uncomment and run this block if you haven't had these packages installed
@@ -44,7 +44,8 @@ library(patchwork)
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-mapid = "23230129"
+# mapid = "23230129"
+mapid = "21078015"
 # mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
@@ -504,7 +505,7 @@ uniqueUsers_filtered
 ```
 
 ```{r}
-userkey = "AidanC126" # Change as appropriate
+userkey = "AidanPereira" # Change as appropriate
 
 subs <- as.list(unique(set$points$ENA_UNIT))
 subs <- subs[grepl(userkey, subs)] 

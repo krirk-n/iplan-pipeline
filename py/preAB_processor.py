@@ -160,9 +160,6 @@ for i in sh_list:
     
     
     while satisfy_count < 50: 
-
-
-
         temp_list = list(range(len(original_luc_list)))
 
         if len(parcel_already_satisfied_index) != 0 : 
@@ -229,9 +226,6 @@ for i in sh_list:
             overall_iteration+=1
 
     while unsatisfy_count < 50: 
-
-
-
         temp_list = list(range(len(original_luc_list)))
 
         if len(parcel_already_unsatisfied_index) != 0 : 
