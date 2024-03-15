@@ -45,7 +45,7 @@ library(patchwork)
 # 0. setting up constant variables (change as appropriate)
 ```{r}
 # mapid = "23230129"
-mapid = "21078015"
+mapid = "20141264"
 # mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
@@ -155,7 +155,7 @@ submission_detailed_df <- data.frame(userKey = character(), submissionCount = in
                                      businessMax = integer(), environmental = integer(), environmentalMax = integer(),
                                      community = integer(), communityMax = integer())
 for (i in 1:length(sub_result)) {
-  if (sub_result[[i]]$userKey %in% uniqueUsers_filtered) {
+  if (sub_result[[i]]$userKey %in% uniqueUsers_filtered) { 
     b_max = sum(business %in% sub_result[[i]]$stakeholders)
     e_max = sum(environmental %in% sub_result[[i]]$stakeholders)
     c_max = sum(community %in% sub_result[[i]]$stakeholders)
@@ -167,6 +167,8 @@ for (i in 1:length(sub_result)) {
     c_count = 0
     for (b in b_select) {
       b_count = b_count + sub_result[[i]]$stakeholderApproval[[b]]
+      # print(list(sub_result[[i]]$stakeholderApproval[[b]], sub_result[[i]]$userKey, sub_result[[i]]$submissionCount))
+      
     }
     for (e in e_select) {
       e_count = e_count + sub_result[[i]]$stakeholderApproval[[e]]
@@ -180,7 +182,6 @@ for (i in 1:length(sub_result)) {
                                     community = c_count, communityMax = c_max))
   }
 }
-
 ```
 
 
@@ -505,7 +506,7 @@ uniqueUsers_filtered
 ```
 
 ```{r}
-userkey = "AidanPereira" # Change as appropriate
+userkey = "allisonceceri" # Change as appropriate
 
 subs <- as.list(unique(set$points$ENA_UNIT))
 subs <- subs[grepl(userkey, subs)] 
@@ -589,6 +590,7 @@ for (i in subs) {
 
 ```
 
+
 ```{r}
 bar_width = 0.5
 dodge_width <- 0  # Adjust this as needed
@@ -636,13 +638,56 @@ y_max <- max(submission_detailed_df$communityMax, na.rm = TRUE)
 hlines <- seq(1, y_max, by = 1)
 c_plot <- c_plot + geom_hline(yintercept = hlines, color = "white", linetype = "solid")
 
+# Barplot
 print((b_plot / e_plot / c_plot) +
   plot_annotation(title = userkey))
 
+#submission nodes for specified user
+
+ona:::plot.ena.ordered.set(set, title = paste(userkey, "submission nodes")) %>%
+  units( 
+    points = subset(set$points, user_name == userkey),
+    points_color = "black",
+    point_position_multiplier = 10,
+    show_mean = FALSE, show_points = TRUE, with_ci = FALSE)%>%
+ nodes(
+    node_size_multiplier = 0.01) 
+
+# ONA plots
 for (p in ona_plots) {
   print(p)
 }
 ```
+
+```{r}
+# Make the land parcel changes matrix for each submission of the user
+
+codes <- c("Commercial", "Conservation_lu", "Cropland", "Industrial", "Pasture", "Recreation", "Residential HD", "Residential LD", "Timber", "Wetlands")
+
+for (i in 1:length(set$line.weights$user_name)) {
+  if (set$line.weights$user_name[i] == userkey) {
+    submission = set$line.weights$ENA_UNIT[i]
+    access_string <- paste0("set$line.weights$ENA_UNIT$`", submission, "`")
+    expression_to_evaluate <- parse(text = access_string)
+    v100 = as.matrix(eval(expression_to_evaluate)) 
+    matrix_data <- matrix(v100, nrow=10, ncol=10, byrow=TRUE)
+
+    colnames(matrix_data) <- codes
+    rownames(matrix_data) <- codes
+    matrix_long <- melt(matrix_data)
+    matuser <- ggplot(matrix_long, aes(x=Var1, y=Var2, fill=value)) +
+      geom_tile(color="gray") +
+      scale_fill_gradient(low="white", high="red") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            panel.grid.major = element_line(color = "gray", size = 0.5), # Customizing major grid lines
+            panel.grid.minor = element_blank()) +
+      labs(x="", y="", title= paste(userkey, "submission number", str_sub(submission, -3, -1)), fill="Intensity")
+    print(matuser)
+  }
+}
+```
+
 
 
 
