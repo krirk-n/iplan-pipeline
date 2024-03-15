@@ -165,6 +165,8 @@ c_matrix_data_processing_helper = function(mapid, submission_data, base_data){
            luc_A_8 = luc_10_8,
            luc_A_9 = luc_10_9)
   
+  df_sub_data[df_sub_data == "luc_10"] <- "luc_A"
+  
   for(i in 1:total_submission){ # n_sumbit is also equal to nrow(base_submitted)
     base = df_sub_data$base# 200 vector
     submitted = df_sub_data[[i]] # 200 vector
