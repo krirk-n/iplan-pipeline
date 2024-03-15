@@ -17,7 +17,7 @@ library(rENA)
 library(plotly)
 
 # change it as appropriate
-mapid = "19747315"
+mapid = "20141264"
 # mapid = "21078015"
 # mapid = "57718789"
 samplesize <- 10000
@@ -35,5 +35,6 @@ reticulate::source_python("py/preAB_processor.py")
 
 # ABC Matrices generator:
 source("R/abc_matrix_generator.R")
+# In the first run, there might be warning messages saying 'No such file or directory'. You can ignore that. The code just tried to clear the old version of abc matrices.
 
 # if you want ONA graphs, please proceed to ONA_analysis.Rmd after run all the previous lines.
