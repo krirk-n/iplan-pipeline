@@ -1,7 +1,7 @@
 # author: Krirk Nirunwiroj, 2023
 # Disclaimer: if you want to re-generate the C matrix, make sure to remove the current C matrix file before re-run the code
 # since we are using appending method it may cause unwanted errors.
-
+library(progress)
 library(readr)
 library(dplyr)
 library(tidyverse)
@@ -231,9 +231,11 @@ c_matrix_data_processing = function(mapid, ordered = FALSE, submission_data = re
       user_keys <- append(user_keys, submission_data[[i]]$userKey)
     }
     unique_user_keys <- unique(user_keys)
+    pb <- progress_bar$new(total = length(unique_user_keys))
     for (i in 1:length(unique_user_keys)){
       partial_data <- list.filter(submission_data, userKey == unique_user_keys[i])
       c_matrix_data_processing_helper(mapid, partial_data, base_data)
+      pb$tick()
     }
   }
 }
