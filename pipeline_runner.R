@@ -17,7 +17,7 @@ library(rENA)
 library(plotly)
 
 # change it as appropriate
-mapid = "20141264"
+mapid = "21078015"
 # mapid = "21078015"
 # mapid = "57718789"
 samplesize <- 10000

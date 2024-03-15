@@ -6,8 +6,8 @@ Modified from luc_change_simulation.py
 import sys
 sys.path.insert(0, r["wd"] + '/py')
 
-import lem_functions as lf
-import lem_classes as lc
+# import lem_functions as lf
+# import lem_classes as lc
 import arango
 import sys
 import os
@@ -63,3 +63,4 @@ reps_map_name = mapid + "_reps.json"
 with open(r["wd"] + "/data/" + reps_map_name, 'w') as f:
     f.write(j)
     f.close()
+
