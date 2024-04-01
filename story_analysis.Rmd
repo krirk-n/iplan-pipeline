@@ -44,8 +44,8 @@ library(patchwork)
 
 # 0. setting up constant variables (change as appropriate)
 ```{r}
-# mapid = "23230129"
-mapid = "20141264"
+mapid = "23230129"
+# mapid = "57718789"
 # mapid = "24096504"
 wd = paste0(getwd(), "/data/")
 ```
@@ -127,13 +127,14 @@ Filter only users with more than 2 submissions
 uniqueUsers_filtered <- submission_df %>%
   group_by(userKey) %>% 
   summarise(Count = n()) %>%
-  filter(Count > 2)
+  filter(Count > 2) %>%
+  arrange(desc(Count))
 
 uniqueUsers_filtered <- uniqueUsers_filtered$userKey
 ```
 
 ```{r}
-numPlots <- 7 # adjust as appropriate
+numPlots <- 8 # adjust as appropriate
 batchSize <- ceiling(length(uniqueUsers_filtered) / numPlots)
 
 for (i in 1:numPlots) {
@@ -506,7 +507,7 @@ uniqueUsers_filtered
 ```
 
 ```{r}
-userkey = "allisonceceri" # Change as appropriate
+userkey = "nghiavo" # Change as appropriate
 
 subs <- as.list(unique(set$points$ENA_UNIT))
 subs <- subs[grepl(userkey, subs)] 
@@ -642,6 +643,17 @@ c_plot <- c_plot + geom_hline(yintercept = hlines, color = "white", linetype = "
 print((b_plot / e_plot / c_plot) +
   plot_annotation(title = userkey))
 
+
+batch <- submission_df %>% filter(userKey == userkey)
+p <- ggplot(batch, aes(x = submissionCount, y = approvalCount, color = userKey, linetype = userKey)) +
+    geom_line(size=1) +
+    scale_x_continuous(breaks = 1:nrow(submission_df), labels = 1:nrow(submission_df), minor_breaks = NULL) +
+    scale_y_continuous(breaks = seq(0, max(submission_df$approvalCount), by = 1), minor_breaks = NULL) +
+    theme_minimal()
+print(p)
+
+
+
 #submission nodes for specified user
 
 ona:::plot.ena.ordered.set(set, title = paste(userkey, "submission nodes")) %>%
@@ -658,36 +670,4 @@ for (p in ona_plots) {
   print(p)
 }
 ```
-
-```{r}
-# Make the land parcel changes matrix for each submission of the user
-
-codes <- c("Commercial", "Conservation_lu", "Cropland", "Industrial", "Pasture", "Recreation", "Residential HD", "Residential LD", "Timber", "Wetlands")
-
-for (i in 1:length(set$line.weights$user_name)) {
-  if (set$line.weights$user_name[i] == userkey) {
-    submission = set$line.weights$ENA_UNIT[i]
-    access_string <- paste0("set$line.weights$ENA_UNIT$`", submission, "`")
-    expression_to_evaluate <- parse(text = access_string)
-    v100 = as.matrix(eval(expression_to_evaluate)) 
-    matrix_data <- matrix(v100, nrow=10, ncol=10, byrow=TRUE)
-
-    colnames(matrix_data) <- codes
-    rownames(matrix_data) <- codes
-    matrix_long <- melt(matrix_data)
-    matuser <- ggplot(matrix_long, aes(x=Var1, y=Var2, fill=value)) +
-      geom_tile(color="gray") +
-      scale_fill_gradient(low="white", high="red") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            panel.grid.major = element_line(color = "gray", size = 0.5), # Customizing major grid lines
-            panel.grid.minor = element_blank()) +
-      labs(x="", y="", title= paste(userkey, "submission number", str_sub(submission, -3, -1)), fill="Intensity")
-    print(matuser)
-  }
-}
-```
-
-
-
 
