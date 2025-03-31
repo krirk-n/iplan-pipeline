@@ -1,6 +1,6 @@
 # iplan-pipeline
-Analysis pipeline of the [iPlan](https://www.i-plan.us/) game developed by [Epistemic Analytics Lab](http://www.epistemicanalytics.org/) of University of Wisconsin - Madison
-
+Analysis pipeline of the [iPlan](https://www.i-plan.us/) game developed by [Epistemic Analytics Lab](http://www.epistemicanalytics.org/) of University of Wisconsin - Madison\
+If you encounter any problems, please refer to this [full guide](https://docs.google.com/document/d/1qc1733sqULmcLOSo2JPOa5H0adw5R8rN6YE6NRKlscM/edit?usp=sharing).
 
 ## Create virtual environment for python
 Use the following command to install virtual environment package:
